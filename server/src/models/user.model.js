@@ -56,9 +56,20 @@ userSchema.methods.generateEmailOTP = function () {
 };
 
 userSchema.methods.verifyEmailOTP = function (plainOTP) {
-    if (!this.emailOTP || !this.emailOTPExpires) return false;
-    if (this.emailOTPExpires < new Date()) return false;
-    return this.emailOTP === hashOTP(String(plainOTP));
+    if (!this.emailOTP || !this.emailOTPExpires) {
+        console.log("verifyEmailOTP - No OTP or expiry");
+        return false;
+    }
+    if (this.emailOTPExpires < new Date()) {
+        console.log("verifyEmailOTP - OTP expired");
+        return false;
+    }
+    const otpToVerify = String(plainOTP).trim();
+    const hashedOTP = hashOTP(otpToVerify);
+    console.log("verifyEmailOTP - Input OTP:", otpToVerify);
+    console.log("verifyEmailOTP - Hashed input:", hashedOTP);
+    console.log("verifyEmailOTP - Stored hash:", this.emailOTP);
+    return this.emailOTP === hashedOTP;
 };
 
 const User = mongoose.model("User", userSchema);

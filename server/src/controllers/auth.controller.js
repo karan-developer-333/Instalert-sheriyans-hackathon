@@ -166,6 +166,9 @@ const verifyEmail = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
+        // Debug logging
+        console.log("VerifyEmail - Received OTP:", otp, "Type:", typeof otp);
+
         if (!email || !otp) {
             return res.status(400).json({ error: "Email and OTP are required" });
         }
@@ -176,6 +179,11 @@ const verifyEmail = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        // Debug logging
+        console.log("VerifyEmail - Stored OTP hash:", user.emailOTP);
+        console.log("VerifyEmail - OTP Expires:", user.emailOTPExpires);
+        console.log("VerifyEmail - Current time:", new Date());
+
         if (!user.emailOTP || !user.emailOTPExpires) {
             return res.status(400).json({ error: "No OTP found. Please request a new one." });
         }
@@ -184,7 +192,12 @@ const verifyEmail = async (req, res) => {
             return res.status(400).json({ error: "OTP has expired. Please request a new one." });
         }
 
-        const isValid = user.verifyEmailOTP(otp);
+        // Ensure OTP is string
+        const otpString = String(otp).trim();
+        console.log("VerifyEmail - OTP after String conversion:", otpString);
+
+        const isValid = user.verifyEmailOTP(otpString);
+        console.log("VerifyEmail - OTP valid:", isValid);
 
         if (!isValid) {
             return res.status(400).json({ error: "Invalid OTP. Please try again." });
