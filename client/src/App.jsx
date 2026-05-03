@@ -77,6 +77,9 @@ function AuthLoader() {
     const checkAuth = async () => {
       try {
         const data = await authService.getMe();
+        if (!data?.user) {
+          throw new Error("Invalid response from server: user data missing");
+        }
         dispatch(loginSuccess({ user: data.user, role: data.user.role }));
       } catch {
         dispatch(loginFailure('Not authenticated'));

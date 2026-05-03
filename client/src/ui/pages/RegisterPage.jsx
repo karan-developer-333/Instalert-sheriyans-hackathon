@@ -26,17 +26,18 @@ export default function RegisterPage() {
     dispatch(loginStart());
     try {
       const data = await authService.register(form);
-      console.log("Register response:", data);
       if (data.requiresVerification) {
         dispatch(loginFailure(null));
         navigate("/auth/verify-email", { state: { email: data.email } });
-      } else {
+      } else if (data.user) {
+        if (!data?.user) {
+          throw new Error("Invalid response from server: user data missing");
+        }
         dispatch(loginSuccess({ user: data.user, role: data.user.role }));
         navigate("/dashboard");
       }
     } catch (err) {
-      console.log("Register error:", err);
-      dispatch(loginFailure(err.message));
+      dispatch(loginFailure(err.error || err.message || "Registration failed"));
     }
   };
 

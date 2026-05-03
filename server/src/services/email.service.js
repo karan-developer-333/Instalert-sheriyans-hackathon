@@ -65,7 +65,7 @@ export const sendVerificationEmail = async (to, otp) => {
 };
 
 export const sendIncidentNotification = async (to, incident, organizationName) => {
-    const incidentUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/incidents/${incident._id}`;
+    const incidentUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/dashboard/incidents/${incident._id}`;
     const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #F7F5F3; border-radius: 12px; border: 1px solid rgba(55,50,47,0.12);">
       <div style="text-align: center; margin-bottom: 24px;">

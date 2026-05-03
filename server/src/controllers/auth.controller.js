@@ -3,7 +3,6 @@ import githubService from "../services/github.service.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 import {config} from "dotenv";
-import { generateOTP, hashOTP } from "../services/otp.service.js";
 import { sendVerificationEmail, sendIncidentNotification } from "../services/email.service.js";
 
 config();
@@ -134,7 +133,6 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
     try {
-        console.log("Registering user with data:", req.body);
         const { username, email, password } = req.body || {};
 
         if(!username || !email || !password){
@@ -146,24 +144,10 @@ const register = async (req, res) => {
 
         const user = await User.create({ username, email, password: hashedPassword });
 
-        console.log('User created, ID:', user._id);
-
-        const otp = await user.generateEmailOTP();
-        console.log('Generated OTP (plain):', otp);
-        console.log('After generateEmailOTP - emailOTP (hashed):', user.emailOTP?.substring(0, 20) + '...');
-
-        const saveResult = await user.save();
-        console.log('User saved, emailOTP after save:', saveResult.emailOTP?.substring(0, 20) + '...');
-        console.log('emailOTPExpires:', saveResult.emailOTPExpires);
-
-        // Verify it saved correctly by reading from DB
-        const verifyUser = await User.findById(user._id).select('+emailOTP +emailOTPExpires');
-        console.log('Verified from DB - emailOTP:', verifyUser.emailOTP?.substring(0, 20) + '...');
-        console.log('Verified from DB - emailOTPExpires:', verifyUser.emailOTPExpires);
+        const otp = user.generateEmailOTP();
+        await user.save();
 
         await sendVerificationEmail(email, otp);
-
-        console.log('Verification email sent to:', email, 'with OTP:', otp);
 
         res.status(201).json({
             message: "User registered successfully. Please verify your email.",
@@ -186,29 +170,24 @@ const verifyEmail = async (req, res) => {
             return res.status(400).json({ error: "Email and OTP are required" });
         }
 
-        const user = await User.findOne({ email }).select("+emailOTP +emailOTPExpires +password");
+        const user = await User.findOne({ email }).select("+emailOTP +emailOTPExpires");
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        console.log(`Verifying OTP for ${email}: entered OTP=${otp}, expected OTP hash=${user.emailOTP?.substring(0, 20)}..., expires at ${user.emailOTPExpires}`);
-
         if (!user.emailOTP || !user.emailOTPExpires) {
-            console.log('ERROR: emailOTP or emailOTPExpires is missing');
-            return res.status(400).json({ error: "Invalid or expired OTP" });
+            return res.status(400).json({ error: "No OTP found. Please request a new one." });
         }
 
         if (user.emailOTPExpires < new Date()) {
-            console.log('ERROR: OTP has expired');
-            return res.status(400).json({ error: "Invalid or expired OTP" });
+            return res.status(400).json({ error: "OTP has expired. Please request a new one." });
         }
 
-        const isValid = await user.verifyEmailOTP(otp);
-        console.log('OTP verification result:', isValid);
+        const isValid = user.verifyEmailOTP(otp);
 
         if (!isValid) {
-            return res.status(400).json({ error: "Invalid or expired OTP" });
+            return res.status(400).json({ error: "Invalid OTP. Please try again." });
         }
 
         user.isEmailVerified = true;
@@ -265,7 +244,7 @@ const resendOTP = async (req, res) => {
             return res.status(400).json({ error: "Email is already verified" });
         }
 
-        const otp = await user.generateEmailOTP();
+        const otp = user.generateEmailOTP();
         await user.save();
 
         await sendVerificationEmail(email, otp);

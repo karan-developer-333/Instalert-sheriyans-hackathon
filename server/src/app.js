@@ -24,7 +24,7 @@ const app = express();
 app.use(morgan('dev'))
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || ["https://f1rr36mb-5173.inc1.devtunnels.ms", 'http://localhost:5173'],
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   methods:["GET","POST","PUT","DELETE","OPTIONS"],
   allowedHeaders:["Content-type","Authorization"],
   credentials: true

@@ -13,7 +13,7 @@ import { sendIncidentNotification } from '../services/email.service.js';
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || ["https://f1rr36mb-5173.inc1.devtunnels.ms", "http://localhost:5173"],
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ['GET', 'POST'],
     credentials: true,
   },

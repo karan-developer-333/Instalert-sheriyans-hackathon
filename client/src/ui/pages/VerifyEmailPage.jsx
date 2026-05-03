@@ -31,11 +31,14 @@ export default function VerifyEmailPage() {
     dispatch(verifyEmailStart());
     try {
       const data = await authService.verifyEmail(email, otp);
+      if (!data?.user) {
+        throw new Error("Invalid response from server: user data missing");
+      }
       dispatch(verifyEmailSuccess({ user: data.user, role: data.user.role }));
       setSuccess(true);
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
-      dispatch(verifyEmailFailure(err.message || "Invalid OTP"));
+      dispatch(verifyEmailFailure(err.error || err.message || "Invalid OTP"));
     }
   };
 

@@ -21,6 +21,9 @@ export default function LoginPage() {
     dispatch(loginStart());
     try {
       const data = await authService.login(form);
+      if (!data?.user) {
+        throw new Error("Invalid response from server: user data missing");
+      }
       dispatch(loginSuccess({ user: data.user, role: data.user.role }));
       navigate("/dashboard");
     } catch (err) {

@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import crypto from "crypto";
+
+function hashOTP(otp) {
+    return crypto.createHash("sha256").update(String(otp)).digest("hex");
+}
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -36,25 +40,25 @@ const userSchema = new mongoose.Schema({
     },
     emailOTP: {
         type: String,
+        select: false,
     },
     emailOTPExpires: {
         type: Date,
+        select: false,
     },
 });
 
-userSchema.methods.generateEmailOTP = async function () {
+userSchema.methods.generateEmailOTP = function () {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const salt = await bcrypt.genSalt(10);
-    this.emailOTP = await bcrypt.hash(otp, salt);
+    this.emailOTP = hashOTP(otp);
     this.emailOTPExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     return otp;
 };
 
-userSchema.methods.verifyEmailOTP = async function (plainOTP) {
+userSchema.methods.verifyEmailOTP = function (plainOTP) {
     if (!this.emailOTP || !this.emailOTPExpires) return false;
     if (this.emailOTPExpires < new Date()) return false;
-    const match = await bcrypt.compare(plainOTP, this.emailOTP);
-    return match;
+    return this.emailOTP === hashOTP(String(plainOTP));
 };
 
 const User = mongoose.model("User", userSchema);
