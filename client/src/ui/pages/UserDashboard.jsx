@@ -1,0 +1,210 @@
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  fetchIncidentsStart, fetchIncidentsSuccess, fetchIncidentsFailure,
+  addIncident, setSelectedIncident,
+} from "../../store/slices/incident.slice";
+import { organizationService } from "../../services/organization.service";
+import { incidentService } from "../../services/incident.service";
+import { userService } from "../../services/user.service";
+import { joinOrganization, getSocket } from "../../utils/socket/socket";
+import IncidentCard from "../components/IncidentCard";
+import EmployeeRow from "../components/EmployeeRow";
+import ChatBox from "../components/ChatBox";
+import JoinCodeInput from "../components/JoinCodeInput";
+import { FileText, Loader2, AlertCircle, X, MessageSquare, Users } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Separator } from "../components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+
+export default function UserDashboard() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { incidents, selectedIncident } = useSelector((state) => state.incident);
+  const { organization } = useSelector((state) => state.organization);
+  const { user } = useSelector((state) => state.auth);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (organization?.organizationJoinCode) {
+      joinOrganization(organization.organizationJoinCode);
+    }
+    const handleReceiveIncident = (data) => {
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      dispatch(addIncident(parsed));
+    };
+    socket.on("receive-incident", handleReceiveIncident);
+    return () => {
+      socket.off("receive-incident", handleReceiveIncident);
+    };
+  }, [organization, dispatch]);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [orgData, incData, empData] = await Promise.all([
+        organizationService.getMyOrg(),
+        incidentService.getIncidents(),
+        organizationService.getEmployees(),
+      ]);
+      dispatch(fetchIncidentsSuccess(incData));
+      setEmployees(empData.members || []);
+    } catch (err) {
+      if (err.status !== 404) {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoin = async (joinCode) => {
+    setError("");
+    try {
+      await userService.joinOrganization(joinCode);
+      loadData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleOpenChat = (incident) => {
+    dispatch(setSelectedIncident(incident));
+    setShowChat(true);
+  };
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+          <FileText className="w-6 h-6 text-[#37322F]" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Dashboard</h1>
+          <p className="text-sm text-[#605A57]">
+            {organization ? `Team: ${organization.organizationName}` : "Join an organization to get started"}
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+          <p className="text-sm text-red-600">{error}</p>
+          <button onClick={() => setError("")} className="ml-auto">
+            <X className="w-4 h-4 text-red-400" />
+          </button>
+        </div>
+      )}
+
+      {!organization && (
+        <Card className="border-[rgba(55,50,47,0.12)] mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle>Join an Organization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <JoinCodeInput onJoin={handleJoin} />
+          </CardContent>
+        </Card>
+      )}
+
+      {organization && (
+        <Tabs defaultValue="incidents" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="incidents">
+              <FileText className="w-4 h-4" /> Incidents ({incidents.length})
+            </TabsTrigger>
+            <TabsTrigger value="employees">
+              <Users className="w-4 h-4" /> Employees ({employees.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="incidents">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-3">
+                {loading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+                  </div>
+                ) : incidents.length === 0 ? (
+                  <Card className="border-[rgba(55,50,47,0.12)]">
+                    <CardContent className="text-center py-12">
+                      <FileText className="w-12 h-12 text-[#605A57]/30 mx-auto mb-3" />
+                      <p className="text-[#605A57]">No incidents yet.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  incidents.map((inc) => (
+                    <IncidentCard
+                      key={inc._id}
+                      incident={inc}
+                      onChat={handleOpenChat}
+                    />
+                  ))
+                )}
+              </div>
+
+              {showChat && selectedIncident && (
+                <div className="lg:col-span-1">
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setShowChat(false);
+                        dispatch(setSelectedIncident(null));
+                      }}
+                      className="absolute -top-2 -right-2 p-1 bg-white border border-[rgba(55,50,47,0.12)] rounded-full shadow-sm hover:bg-[#F7F5F3] z-10"
+                    >
+                      <X className="w-4 h-4 text-[#605A57]" />
+                    </button>
+                    <ChatBox
+                      incidentId={selectedIncident._id}
+                      joinCode={organization?.organizationJoinCode || ""}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employees">
+            <div className="space-y-3">
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+                </div>
+              ) : employees.length === 0 ? (
+                <Card className="border-[rgba(55,50,47,0.12)]">
+                  <CardContent className="text-center py-12">
+                    <Users className="w-12 h-12 text-[#605A57]/30 mx-auto mb-3" />
+                    <p className="text-[#605A57]">No employees yet.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                employees.map((emp) => (
+                  <EmployeeRow
+                    key={emp._id}
+                    employee={emp}
+                    isOwner={false}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
+}
