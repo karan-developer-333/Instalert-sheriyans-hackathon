@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowRight, Zap, BarChart3, Users, Code2, Layers } from "lucide-react";
+import { ArrowRight, Zap, BarChart3, Users, Code2, Layers, Copy, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
@@ -11,6 +11,7 @@ export default function LandingPage() {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const [activeCard, setActiveCard] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -29,6 +30,12 @@ export default function LandingPage() {
       mountedRef.current = false;
     };
   }, []);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText("npm i @instalert/sdk");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const features = [
     { icon: Zap, title: "Plan your schedules", description: "Streamline customer subscriptions and billing with automated scheduling tools." },
@@ -165,6 +172,88 @@ export default function LandingPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Quick Start / SDK Installation Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-[900px] mx-auto text-center space-y-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F7F5F3] rounded-full shadow-sm border border-[rgba(2,6,23,0.08)]">
+              <Code2 className="w-3 h-3 text-[#37322F]" />
+              <span className="text-xs font-medium text-[#37322F]">Quick Start</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-semibold text-[#37322F]">
+              Get Started in Seconds
+            </h2>
+            <p className="text-sm sm:text-base text-[#605A57] max-w-[500px] mx-auto">
+              Install the SDK and start tracking errors instantly with just a few lines of code.
+            </p>
+          </div>
+
+          {/* Install Command */}
+          <div className="max-w-[600px] mx-auto">
+            <p className="text-sm font-medium text-[#49423D] mb-3 text-left">1. Install the package</p>
+            <div className="relative bg-[#1e1e1e] rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
+                <span className="text-xs text-gray-400">Terminal</span>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-white transition-colors"
+                >
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <div className="p-4 text-left">
+                <code className="text-green-400 font-mono text-sm">npm i @instalert/sdk</code>
+              </div>
+            </div>
+          </div>
+
+          {/* Usage Example */}
+          <div className="max-w-[600px] mx-auto">
+            <p className="text-sm font-medium text-[#49423D] mb-3 text-left">2. Initialize in your server</p>
+            <div className="relative bg-[#1e1e1e] rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
+                <span className="text-xs text-gray-400">server.js</span>
+              </div>
+              <div className="p-4 text-left overflow-x-auto">
+                <pre className="text-sm font-mono text-gray-300 leading-relaxed"><code>{`import { init, expressMiddleware } from '@instalert/sdk';
+import express from 'express';
+
+const app = express();
+
+// Initialize InstaAlert
+init({
+  apiKey: 'ik_live_YOUR_KEY_HERE',  // Get from dashboard
+  serverName: 'my-server',
+  metadata: { environment: 'production' }
+});
+
+// Add error tracking middleware
+app.use(expressMiddleware());
+
+// Your routes...
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
+
+app.listen(3000);`}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button 
+              size="lg" 
+              className="rounded-full bg-[#37322F] hover:bg-[#37322F]/90 px-10 h-12 text-base"
+              onClick={() => navigate(isAuthenticated ? "/dashboard/api-keys" : "/auth/register")}
+            >
+              Get Your API Key <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            <p className="text-xs text-[#605A57] mt-3">No credit card required. Free tier available.</p>
+          </div>
         </div>
       </section>
 

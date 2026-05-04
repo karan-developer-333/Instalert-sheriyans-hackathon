@@ -54,7 +54,7 @@ export default function OrgDashboard() {
     dispatch(fetchOrgStart());
     try {
       const [orgData, empData] = await Promise.all([
-        organizationService.getMyOwnOrg(),
+        organizationService.getOrganization(),
         organizationService.getEmployees(),
       ]);
       dispatch(fetchOrgSuccess(orgData));
@@ -521,9 +521,15 @@ export default function OrgDashboard() {
           </Dialog>
 
           {organization?.organizationJoinCode && (
-            <Button variant="outline" onClick={copyJoinCode}>
-              <ClipboardCopy className="w-4 h-4" />
-              {copied ? "Copied!" : "Copy Join Code"}
+            <Button 
+              variant="outline" 
+              onClick={copyJoinCode}
+              className="flex items-center gap-2 border-[rgba(55,50,47,0.12)] shrink-0 bg-white hover:bg-gray-50"
+            >
+              {copied ? <CheckCircle className="w-4 h-4 text-green-600" /> : <ClipboardCopy className="w-4 h-4 text-[#605A57]" />}
+              <span className={copied ? "text-green-600 font-medium" : "text-[#605A57]"}>
+                {copied ? "Copied!" : `Join Code: ${organization.organizationJoinCode}`}
+              </span>
             </Button>
           )}
         </div>

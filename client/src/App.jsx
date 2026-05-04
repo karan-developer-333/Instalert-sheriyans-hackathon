@@ -68,7 +68,7 @@ function RoleBasedRedirect() {
   }
 
   if (role === ROLES.ADMIN) return <Navigate to="/dashboard/admin" replace />;
-  if (role === ROLES.ORGANIZATION) return <Navigate to="/dashboard/incidents" replace />;
+  if (role === ROLES.ORGANIZATION) return <Navigate to="/dashboard/organization" replace />;
   return <Navigate to="/dashboard/user" replace />;
 }
 
@@ -151,15 +151,6 @@ export default function App() {
             }
           >
             <Route index element={<RoleBasedRedirect />} />
-
-            <Route
-              path="admin"
-              element={
-                <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
 
             <Route
               path="organization"

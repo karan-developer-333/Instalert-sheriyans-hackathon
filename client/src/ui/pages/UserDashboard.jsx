@@ -13,7 +13,7 @@ import IncidentCard from "../components/IncidentCard";
 import EmployeeRow from "../components/EmployeeRow";
 import ChatBox from "../components/ChatBox";
 import JoinCodeInput from "../components/JoinCodeInput";
-import { FileText, Loader2, AlertCircle, X, MessageSquare, Users } from "lucide-react";
+import { FileText, Loader2, AlertCircle, X, MessageSquare, Users, Copy, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -31,6 +31,15 @@ export default function UserDashboard() {
   const [error, setError] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (organization?.organizationJoinCode) {
+      navigator.clipboard.writeText(organization.organizationJoinCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -88,16 +97,32 @@ export default function UserDashboard() {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
-          <FileText className="w-6 h-6 text-[#37322F]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
+            <FileText className="w-6 h-6 text-[#37322F]" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] break-words">Dashboard</h1>
+            <p className="text-xs sm:text-sm text-[#605A57]">
+              {organization ? `Team: ${organization.organizationName}` : "Join an organization to get started"}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] break-words">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-[#605A57]">
-            {organization ? `Team: ${organization.organizationName}` : "Join an organization to get started"}
-          </p>
-        </div>
+
+        {organization?.organizationJoinCode && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCopy}
+            className="flex items-center gap-2 border-[rgba(55,50,47,0.12)] shrink-0 w-fit bg-white hover:bg-gray-50"
+          >
+            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-[#605A57]" />}
+            <span className={copied ? "text-green-600 font-medium" : "text-[#605A57]"}>
+              {copied ? "Copied!" : `Join Code: ${organization.organizationJoinCode}`}
+            </span>
+          </Button>
+        )}
       </div>
 
       {error && (
