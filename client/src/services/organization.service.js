@@ -40,8 +40,8 @@ const askOrgAI = async (message) => {
   return data;
 };
 
-const executeOrgAIAction = async (action, params) => {
-  const { data } = await api.post("/organization/ai-execute-action", { action, params });
+const executeOrgAIAction = async (actionType, params) => {
+  const { data } = await api.post("/organization/ai-execute-action", { actionType, params });
   return data;
 };
 

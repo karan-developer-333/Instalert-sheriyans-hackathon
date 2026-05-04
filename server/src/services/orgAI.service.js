@@ -153,6 +153,21 @@ const getContentString = (content) => {
     return "";
 };
 
+export const askMistral = async (systemPrompt, userMessage) => {
+    const response = await client.chat.complete({
+        model: "mistral-small-latest",
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+        ],
+        maxTokens: 1024,
+    });
+
+    const message = response.choices?.[0]?.message;
+    return getContentString(message?.content) || "No response from AI";
+};
+
 export default {
     analyzeOrgRequest,
+    askMistral,
 };

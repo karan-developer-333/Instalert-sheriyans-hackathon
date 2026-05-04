@@ -28,7 +28,7 @@ export default function OrgAIBubble() {
     setLoading(true);
 
     try {
-      const result = await organizationService.orgAIAssistant(userMsg);
+      const result = await organizationService.askOrgAI(userMsg);
       setChatHistory((prev) =>
         prev.map((msg, i) =>
           i === prev.length - 1
@@ -40,10 +40,19 @@ export default function OrgAIBubble() {
             : msg
         )
       );
-    } catch {
+    } catch (err) {
+      console.error("AI Error:", err);
       setChatHistory((prev) =>
         prev.map((msg, i) =>
-          i === prev.length - 1 ? { role: "ai", content: "Failed to get response. Please try again.", isError: true } : msg
+          i === prev.length - 1
+            ? {
+                role: "ai",
+                content:
+                  err.response?.data?.error ||
+                  "Failed to get response. Please check if the backend is running and CORS is configured correctly.",
+                isError: true,
+              }
+            : msg
         )
       );
     } finally {
