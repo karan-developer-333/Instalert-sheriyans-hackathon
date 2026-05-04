@@ -1,5 +1,8 @@
 # InstaAlert Setup Guide
 
+### 📺 [Watch the Pitch Video](https://drive.google.com/file/d/1lP5-SDls3e8zHMflQ9uBlpajKsKDrK8j/view?usp=sharing)
+
+
 ## Prerequisites
 - Node.js (v18 or higher)
 - MongoDB instance (local or Atlas)
@@ -10,7 +13,7 @@
 Instalert-sheriyans-hackathon/
 ├── client/          # React frontend
 ├── server/          # Express backend
-└── SETUP.md        # This file
+└── README.md       # This file
 ```
 
 ## Server Setup

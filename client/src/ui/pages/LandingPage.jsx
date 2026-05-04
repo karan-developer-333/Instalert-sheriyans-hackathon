@@ -32,7 +32,7 @@ export default function LandingPage() {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText("npm i @instalert/sdk");
+    navigator.clipboard.writeText("npm i instalert");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -206,7 +206,7 @@ export default function LandingPage() {
                 </button>
               </div>
               <div className="p-4 text-left">
-                <code className="text-green-400 font-mono text-sm">npm i @instalert/sdk</code>
+                <code className="text-green-400 font-mono text-sm">npm i instalert</code>
               </div>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
                 <span className="text-xs text-gray-400">server.js</span>
               </div>
               <div className="p-4 text-left overflow-x-auto">
-                <pre className="text-sm font-mono text-gray-300 leading-relaxed"><code>{`import { init, expressMiddleware } from '@instalert/sdk';
+                <pre className="text-sm font-mono text-gray-300 leading-relaxed"><code>{`import { init, expressMiddleware } from 'instalert';
 import express from 'express';
 
 const app = express();
