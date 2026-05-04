@@ -6,8 +6,10 @@ import { Input } from '../components/ui/input';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
+  const emailFromUrl = searchParams.get('email') || '';
 
-  const [otp, ] = useState('');
+  const [email, setEmail] = useState(emailFromUrl);
+  const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);

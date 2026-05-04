@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { loginStart, loginSuccess, loginFailure } from "../../store/slices/auth.slice";
+import { loginStart, loginSuccess, loginFailure, clearError } from "../../store/slices/auth.slice";
 import authService from "../../services/auth.service";
 import { UserPlus, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -15,6 +15,10 @@ export default function RegisterPage() {
   const { loading, error } = useSelector((state) => state.auth);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [fieldError, setFieldError] = useState("");
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

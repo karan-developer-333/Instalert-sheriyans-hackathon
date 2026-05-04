@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { loginStart, loginSuccess, loginFailure } from "../../store/slices/auth.slice";
+import { loginStart, loginSuccess, loginFailure, clearError } from "../../store/slices/auth.slice";
 import authService from "../../services/auth.service";
 import { LogIn, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -15,6 +15,10 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
   const [form, setForm] = useState({ email: "", password: "" });
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,7 +120,7 @@ export default function LoginPage() {
               </Link>
             </p>
             <p className="text-center text-sm text-[#605A57] mt-2">
-              <Link to="/forgot-password" className="text-[#37322F] hover:underline">
+              <Link to="/auth/forgot-password" className="text-[#37322F] hover:underline">
                 Forgot password?
               </Link>
             </p>

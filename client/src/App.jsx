@@ -13,7 +13,6 @@ import { useCookies } from 'react-cookie';
 const LoginPage = lazy(() => import('./ui/pages/LoginPage'));
 const RegisterPage = lazy(() => import('./ui/pages/RegisterPage'));
 const VerifyEmailPage = lazy(() => import('./ui/pages/VerifyEmailPage'));
-const AdminDashboard = lazy(() => import('./ui/pages/AdminDashboard'));
 const OrgDashboard = lazy(() => import('./ui/pages/OrgDashboard'));
 const UserOrgPage = lazy(() => import('./ui/pages/UserOrgPage'));
 const IncidentDetailPage = lazy(() => import('./ui/pages/IncidentDetailPage'));
@@ -88,9 +87,12 @@ function AuthLoader() {
         if (!cancelled) {
           dispatch(loginSuccess({ user: data.user, role: data.user.role }));
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          dispatch(loginFailure('Not authenticated'));
+          const isAuthPage = window.location.pathname.startsWith("/auth");
+          if (!isAuthPage && err?.message !== "Not authenticated") {
+            dispatch(loginFailure('Session expired. Please login again.'));
+          }
         }
       } finally {
         if (!cancelled) {

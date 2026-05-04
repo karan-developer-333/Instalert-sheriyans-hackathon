@@ -9,13 +9,17 @@ import UserModel from '../models/user.model.js';
 import aiScoreService from '../services/aiScore.service.js';
 import { sendIncidentNotification } from '../services/email.service.js';
 
+const ALLOWED_ORIGINS = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',')
+  : ["http://localhost:5173"];
+
 let io, server;
 
 const initSocket = (app) => {
   server = http.createServer(app);
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      origin: ALLOWED_ORIGINS,
       methods: ['GET', 'POST'],
       credentials: true,
     },
