@@ -1,9 +1,9 @@
 import api from "./api";
 
 export const incidentService = {
-  getIncidents: async () => {
-    const { data } = await api.get("/incidents/");
-    return data.incidents || [];
+  getIncidents: async ({ page = 1, limit = 10 } = {}) => {
+    const { data } = await api.get("/incidents/", { params: { page, limit } });
+    return data;
   },
 
   getIncident: async (id) => {

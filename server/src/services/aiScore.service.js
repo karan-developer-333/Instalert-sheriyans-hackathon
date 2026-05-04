@@ -1,7 +1,7 @@
 import MessageModel from "../models/message.model.js";
 import UserModel from "../models/user.model.js";
 import IncidentModel from "../models/incident.model.js";
-import aiService from "./ai.service.js";
+import aiService from "./orgAI.service.js";
 
 const SYSTEM_PROMPT = `You are an incident response evaluator. Analyze the following messages from an incident and assign a quality score (1-10) to each message based on:
 - Relevance to the incident and its description

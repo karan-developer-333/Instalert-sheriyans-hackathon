@@ -1,20 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowRight, CheckCircle2, Zap, Shield, BarChart3, Users, Code2, Layers, X, ChevronDown, Star } from "lucide-react";
+import { ArrowRight, Zap, BarChart3, Users, Code2, Layers } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state) => state.auth);
   const [activeCard, setActiveCard] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [openFaq, setOpenFaq] = useState(null);
   const mountedRef = useRef(true);
-  const [pricingAnnual, setPricingAnnual] = useState(false);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -39,23 +36,6 @@ export default function LandingPage() {
     { icon: Users, title: "Collaborate seamlessly", description: "Keep your team aligned with shared dashboards and collaborative workflows." },
   ];
 
-  const faqs = [
-    { q: "What is InstaAlert?", a: "InstaAlert is a SaaS platform for effortless custom contract billing, team collaboration, and incident management." },
-    { q: "Is there a free plan?", a: "Yes! Our Starter plan is completely free and supports up to 3 team members." },
-    { q: "Can I switch plans anytime?", a: "Absolutely. You can upgrade or downgrade your plan at any time from your settings." },
-    { q: "How does the team collaboration work?", a: "Invite team members via join codes. Everyone gets real-time updates on incidents and tasks." },
-    { q: "Do you offer API access?", a: "Yes, our Professional and Enterprise plans include full API access for integrations." },
-    { q: "What kind of support do you provide?", a: "All plans include email support. Enterprise customers get dedicated account managers and 24/7 priority support." },
-  ];
-
-  const testimonials = [
-    { name: "Sarah Chen", role: "CTO at TechFlow", quote: "InstaAlert transformed how we handle billing. The automation alone saved us 20 hours per week.", rating: 5 },
-    { name: "Marcus Johnson", role: "PM at DataSync", quote: "The real-time collaboration features are incredible. Our team has never been more aligned.", rating: 5 },
-    { name: "Emily Rodriguez", role: "Founder at BuildStack", quote: "Setup took minutes, not days. The intuitive interface made onboarding our team a breeze.", rating: 5 },
-  ];
-
-  const integrations = ["GitHub", "Slack", "Figma", "Discord", "Notion", "Stripe", "Jira", "Linear"];
-
   return (
     <div className="min-h-screen bg-[#F7F5F3]">
       {/* Navigation */}
@@ -64,11 +44,6 @@ export default function LandingPage() {
           <div className="bg-[#F7F5F3]/90 backdrop-blur-sm shadow-[0px_0px_0px_2px_white] rounded-full px-4 py-2 flex justify-between items-center border border-[rgba(55,50,47,0.08)]">
             <div className="flex items-center gap-4">
               <span className="text-lg font-medium text-[#2F3037] font-sans">InstaAlert</span>
-              <div className="hidden sm:flex items-center gap-4">
-                <a href="#features" className="text-[13px] font-medium text-[rgba(49,45,43,0.80)] hover:text-[#37322F] transition-colors">Products</a>
-                <a href="#pricing" className="text-[13px] font-medium text-[rgba(49,45,43,0.80)] hover:text-[#37322F] transition-colors">Pricing</a>
-                <a href="#faq" className="text-[13px] font-medium text-[rgba(49,45,43,0.80)] hover:text-[#37322F] transition-colors">FAQ</a>
-              </div>
             </div>
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
@@ -157,33 +132,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-16 px-4 border-y border-[rgba(55,50,47,0.12)]">
-        <div className="max-w-[586px] mx-auto text-center space-y-4 mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-full shadow-sm border border-[rgba(2,6,23,0.08)]">
-            <Star className="w-3 h-3 text-[#37322F] fill-[#37322F]" />
-            <span className="text-xs font-medium text-[#37322F]">Social Proof</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-[#49423D] tracking-tight">
-            Confidence backed by results
-          </h2>
-          <p className="text-sm sm:text-base text-[#605A57]">
-            Our customers achieve more each day because their tools are simple, powerful, and clear.
-          </p>
-        </div>
-
-        <div className="max-w-[700px] mx-auto grid grid-cols-2 sm:grid-cols-4 gap-px bg-[rgba(55,50,47,0.12)] rounded-lg overflow-hidden border border-[rgba(55,50,47,0.12)]">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-20 sm:h-24 bg-white flex items-center justify-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#37322F]/10 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-[#37322F]/30" />
-              </div>
-              <span className="text-sm sm:text-base font-medium text-[#37322F]">{integrations[i]}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Features Grid */}
       <section id="features" className="py-16 px-4 border-b border-[rgba(55,50,47,0.12)]">
         <div className="max-w-[616px] mx-auto text-center space-y-4 mb-12">
@@ -217,106 +165,6 @@ export default function LandingPage() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16 px-4 border-b border-[rgba(55,50,47,0.12)]">
-        <div className="max-w-[616px] mx-auto text-center space-y-4 mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#49423D] tracking-tight">Loved by teams everywhere</h2>
-          <p className="text-sm sm:text-base text-[#605A57]">See what our customers have to say about their experience.</p>
-        </div>
-
-        <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <Card key={i} className="border-[rgba(55,50,47,0.12)] bg-white">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex gap-1">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  ))}
-                </div>
-                <p className="text-sm text-[#49423D] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3 pt-2">
-                  <div className="w-8 h-8 rounded-full bg-[#37322F]/10 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-[#37322F]">{t.name.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-[#37322F]">{t.name}</p>
-                    <p className="text-xs text-[#605A57]">{t.role}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="py-16 px-4 border-b border-[rgba(55,50,47,0.12)]">
-        <div className="max-w-[616px] mx-auto text-center space-y-4 mb-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#49423D] tracking-tight">Simple, transparent pricing</h2>
-          <p className="text-sm sm:text-base text-[#605A57]">Choose the plan that works best for your team.</p>
-        </div>
-
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <span className={`text-sm ${!pricingAnnual ? "text-[#37322F] font-medium" : "text-[#605A57]"}`}>Monthly</span>
-          <button onClick={() => setPricingAnnual(!pricingAnnual)} className="w-10 h-5 rounded-full bg-[#37322F] relative transition-colors">
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${pricingAnnual ? "translate-x-5" : "translate-x-0.5"}`} />
-          </button>
-          <span className={`text-sm ${pricingAnnual ? "text-[#37322F] font-medium" : "text-[#605A57]"}`}>
-            Annual <span className="text-green-600 text-xs">(save 20%)</span>
-          </span>
-        </div>
-
-        <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { name: "Starter", price: 0, desc: "Perfect for small teams", features: ["Up to 3 members", "Basic incident tracking", "Email support", "Community access"] },
-            { name: "Professional", price: pricingAnnual ? 16 : 20, desc: "For growing teams", features: ["Up to 25 members", "Advanced analytics", "API access", "Priority support", "Custom integrations"], popular: true },
-            { name: "Enterprise", price: pricingAnnual ? 160 : 200, desc: "For large organizations", features: ["Unlimited members", "SSO & SAML", "Dedicated account manager", "24/7 support", "SLA guarantee", "Custom contracts"] },
-          ].map((plan, i) => (
-            <Card key={i} className={`border-[rgba(55,50,47,0.12)] ${plan.popular ? "ring-2 ring-[#37322F] shadow-lg" : ""}`}>
-              <CardContent className="p-6 space-y-4">
-                {plan.popular && <span className="text-xs font-medium text-[#37322F] bg-[#37322F]/10 px-2 py-0.5 rounded-full">Most Popular</span>}
-                <h3 className="text-lg font-semibold text-[#37322F]">{plan.name}</h3>
-                <p className="text-sm text-[#605A57]">{plan.desc}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-serif font-bold text-[#37322F]">${plan.price}</span>
-                  {plan.price > 0 && <span className="text-sm text-[#605A57]">/month</span>}
-                </div>
-                <Separator />
-                <ul className="space-y-2">
-                  {plan.features.map((f, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm text-[#605A57]">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button className={`w-full ${plan.popular ? "bg-[#37322F] hover:bg-[#37322F]/90" : ""}`} variant={plan.popular ? "default" : "outline"} onClick={() => navigate("/auth/register")}>
-                  {plan.price === 0 ? "Get started" : "Subscribe"}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="py-16 px-4 border-b border-[rgba(55,50,47,0.12)]">
-        <div className="max-w-[616px] mx-auto text-center space-y-4 mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#49423D] tracking-tight">Frequently asked questions</h2>
-          <p className="text-sm sm:text-base text-[#605A57]">Everything you need to know about InstaAlert.</p>
-        </div>
-
-        <div className="max-w-[700px] mx-auto">
-          <Accordion type="single" collapsible className="space-y-2">
-            {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="border border-[rgba(55,50,47,0.12)] rounded-lg px-4">
-                <AccordionTrigger className="text-sm font-medium text-[#37322F]">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-sm text-[#605A57]">{faq.a}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
         </div>
       </section>
 
@@ -355,7 +203,6 @@ export default function LandingPage() {
               <p className="text-sm font-medium text-[rgba(73,66,61,0.50)]">Product</p>
               <div className="space-y-2">
                 <a href="#features" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">Features</a>
-                <a href="#pricing" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">Pricing</a>
                 <a href="#" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">Integrations</a>
               </div>
             </div>
@@ -371,7 +218,6 @@ export default function LandingPage() {
               <p className="text-sm font-medium text-[rgba(73,66,61,0.50)]">Resources</p>
               <div className="space-y-2">
                 <a href="#" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">Documentation</a>
-                <a href="#faq" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">FAQ</a>
                 <a href="#" className="block text-sm text-[#49423D] hover:text-[#37322F] transition-colors">Support</a>
               </div>
             </div>

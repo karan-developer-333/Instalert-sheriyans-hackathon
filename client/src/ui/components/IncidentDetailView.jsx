@@ -4,9 +4,10 @@ import { addMessage, clearMessages, updateMessage, deleteMessage } from "../../s
 import { updateIncident } from "../../store/slices/incident.slice";
 import { incidentService } from "../../services/incident.service";
 import { getSocket, sendMessage, toggleIncidentStatus, updateMessage as socketUpdateMessage, deleteMessage as socketDeleteMessage } from "../../utils/socket/socket";
-import { ROLES, STATUS_LABELS, STATUS_COLORS } from "../../utils/constants";
+import { ROLES, STATUS_LABELS, STATUS_COLORS, SEVERITY_LABELS, SEVERITY_COLORS } from "../../utils/constants";
 import AIAssistantDialog from "./AIAssistantDialog";
-import { Clock, MessageCircle, Send, Loader2, X, CheckCircle, Pencil, Trash2, Save } from "lucide-react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { Clock, MessageCircle, Send, Loader2, X, CheckCircle, Pencil, Trash2, Save, ServerCrash } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -271,6 +272,16 @@ export default function IncidentDetailView({ incident, onClose, orgJoinCode }) {
               <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>
                 {STATUS_LABELS[incident.status]}
               </Badge>
+              {incident.severity && (
+                <Badge variant="outline" className={`${SEVERITY_COLORS[incident.severity] || SEVERITY_COLORS.medium} border`}>
+                  {SEVERITY_LABELS[incident.severity]}
+                </Badge>
+              )}
+              {incident.source === 'auto-error' && (
+                <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200 flex items-center gap-1">
+                  <ServerCrash className="w-3 h-3" /> Auto-Detected
+                </Badge>
+              )}
               <span className="flex items-center gap-1 text-xs text-[#605A57]">
                 <Clock className="w-3 h-3" />
                 {new Date(incident.createdAt).toLocaleDateString("en-US", {
@@ -278,6 +289,9 @@ export default function IncidentDetailView({ incident, onClose, orgJoinCode }) {
                   hour: "2-digit", minute: "2-digit",
                 })}
               </span>
+              {incident.serverName && (
+                <span className="text-xs text-[#605A57]">Server: {incident.serverName}</span>
+              )}
             </div>
             <CardTitle className="text-xl font-serif mt-3">{incident.title}</CardTitle>
           </div>
@@ -309,7 +323,9 @@ export default function IncidentDetailView({ incident, onClose, orgJoinCode }) {
       </CardHeader>
       <Separator className="mx-6" />
       <CardContent className="pt-4 pb-3">
-        <p className="text-sm text-[#49423D] whitespace-pre-wrap">{incident.description}</p>
+        <div className="text-sm text-[#49423D] whitespace-pre-wrap markdown-content max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[rgba(55,50,47,0.2)] scrollbar-track-transparent">
+          <MarkdownRenderer content={incident.description} />
+        </div>
       </CardContent>
 
       <Separator className="mx-6" />

@@ -5,10 +5,14 @@ import { store } from './store/store'
 import './index.css'
 import App from './App.jsx'
 
+import { CookiesProvider } from 'react-cookie'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <CookiesProvider>
+        <App />
+      </CookiesProvider>
     </Provider>
   </StrictMode>,
 )

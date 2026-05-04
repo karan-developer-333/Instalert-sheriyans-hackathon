@@ -5,6 +5,12 @@ const initialState = {
   selectedIncident: null,
   loading: false,
   error: null,
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 10,
+  },
 };
 
 const incidentSlice = createSlice({
@@ -18,11 +24,21 @@ const incidentSlice = createSlice({
     fetchIncidentsSuccess: (state, action) => {
       state.loading = false;
       state.incidents = action.payload.incidents || action.payload || [];
+      if (action.payload.pagination) {
+        state.pagination = { ...state.pagination, ...action.payload.pagination };
+      }
       state.error = null;
     },
     fetchIncidentsFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
+    },
+    setPage: (state, action) => {
+      state.pagination.currentPage = action.payload;
+    },
+    setLimit: (state, action) => {
+      state.pagination.limit = action.payload;
+      state.pagination.currentPage = 1;
     },
     setSelectedIncident: (state, action) => {
       state.selectedIncident = action.payload;
@@ -65,5 +81,7 @@ export const {
   updateIncident,
   removeIncident,
   clearIncidents,
+  setPage,
+  setLimit,
 } = incidentSlice.actions;
 export default incidentSlice.reducer;

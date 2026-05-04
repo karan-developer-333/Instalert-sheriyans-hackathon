@@ -2,16 +2,19 @@ import IncidentModel from "../models/incident.model.js";
 import OrganizationModel from "../models/organization.model.js";
 import Referer from "../models/referer.model.js";
 import MessageModel from "../models/message.model.js";
-import UserModel from "../models/user.model.js";
-import aiService from "../services/ai.service.js";
+
+import aiService from "../services/orgAI.service.js";
 import aiScoreService from "../services/aiScore.service.js";
 import { io } from "../socket/socket.js";
 import { sendIncidentNotification } from "../services/email.service.js";
 
-// Get all incidents for organizations the user belongs to
+// Get all incidents for organizations the user belongs to (with pagination)
 export const getIncidents = async (req, res) => {
     try {
         const userId = req.user._id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
         const userReferers = await Referer.find({ referer: userId });
         const ownedOrgs = await OrganizationModel.find({ owner: userId });
@@ -26,17 +29,27 @@ export const getIncidents = async (req, res) => {
         if (orgIds.length === 0) {
             return res.status(200).json({
                 message: "No incidents found",
-                incidents: []
+                incidents: [],
+                pagination: { currentPage: 1, totalPages: 0, totalCount: 0 }
             });
         }
 
+        const totalCount = await IncidentModel.countDocuments({
+            organization: { $in: orgIds }
+        });
+
         const incidents = await IncidentModel.find({
             organization: { $in: orgIds }
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+        const totalPages = Math.ceil(totalCount / limit);
 
         res.status(200).json({
             message: "Incidents fetched successfully",
-            incidents
+            incidents,
+            pagination: { currentPage: page, totalPages, totalCount }
         });
 
     } catch (error) {

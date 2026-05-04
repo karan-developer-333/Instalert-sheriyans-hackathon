@@ -26,6 +26,22 @@ const incidentSchema = new mongoose.Schema({
     notifiedAt: {
         type: Date,
     },
+    source: {
+        type: String,
+        enum: ["manual", "auto-error"],
+        default: "manual",
+    },
+    errorFingerprint: {
+        type: String,
+    },
+    serverName: {
+        type: String,
+    },
+    severity: {
+        type: String,
+        enum: ["low", "medium", "high", "critical"],
+        default: "medium",
+    },
 });
 
 const IncidentModel = mongoose.model("Incident", incidentSchema);

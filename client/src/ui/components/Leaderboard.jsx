@@ -11,10 +11,6 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadLeaderboard();
-  }, []);
-
   const loadLeaderboard = async () => {
     setLoading(true);
     setError("");
@@ -27,6 +23,11 @@ export default function Leaderboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadLeaderboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const rankIcon = (rank) => {
     if (rank === 1) return <Medal className="w-5 h-5 text-yellow-500" />;

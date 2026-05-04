@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { loginStart, loginSuccess, loginFailure } from "../../store/slices/auth.slice";
-import { authService } from "../../services/auth.service";
+import authService from "../../services/auth.service";
 import { UserPlus, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -18,10 +18,6 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 6) {
-      setFieldError("Password must be at least 6 characters");
-      return;
-    }
     setFieldError("");
     dispatch(loginStart());
     try {
@@ -30,9 +26,6 @@ export default function RegisterPage() {
         dispatch(loginFailure(null));
         navigate("/auth/verify-email", { state: { email: data.email } });
       } else if (data.user) {
-        if (!data?.user) {
-          throw new Error("Invalid response from server: user data missing");
-        }
         dispatch(loginSuccess({ user: data.user, role: data.user.role }));
         navigate("/dashboard");
       }

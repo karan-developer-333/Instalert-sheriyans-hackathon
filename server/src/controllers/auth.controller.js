@@ -3,7 +3,7 @@ import githubService from "../services/github.service.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 import {config} from "dotenv";
-import { sendVerificationEmail, sendIncidentNotification } from "../services/email.service.js";
+import { sendVerificationEmail, sendIncidentNotification, sendPasswordResetEmail } from "../services/email.service.js";
 
 config();
 
@@ -15,7 +15,7 @@ const githubAuth = (req, res) => {
 }
 
 
-const githubcallback = async (req, res) => {
+const githubCallback = async (req, res) => {
     try {
 
         const { code } = req.query;
@@ -115,6 +115,7 @@ const login = async (req, res) => {
 
         res.status(200).json({
             message: "User logged in successfully",
+            token,
             user: {
                 id: user._id,
                 username: user.username,
@@ -139,6 +140,21 @@ const register = async (req, res) => {
             return res.status(400).json({ error: "All fields are required" });
         }
 
+        if (password.length < 6) {
+            return res.status(400).json({ error: "Password must be at least 6 characters" });
+        }
+
+        // Check if username or email already exists
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return res.status(409).json({ error: "An account with this email already exists" });
+            }
+            if (existingUser.username === username) {
+                return res.status(409).json({ error: "This username is already taken" });
+            }
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -147,7 +163,16 @@ const register = async (req, res) => {
         const otp = user.generateEmailOTP();
         await user.save();
 
-        await sendVerificationEmail(email, otp);
+        const emailResult = await sendVerificationEmail(email, otp);
+        if (!emailResult?.success) {
+            // User is created but email failed — still tell them to verify
+            console.error("Failed to send verification email:", emailResult?.error);
+            return res.status(201).json({
+                message: "Account created but we couldn't send the verification email. Please use 'Resend code' on the next page.",
+                requiresVerification: true,
+                email: user.email,
+            });
+        }
 
         res.status(201).json({
             message: "User registered successfully. Please verify your email.",
@@ -157,7 +182,20 @@ const register = async (req, res) => {
 
     } catch (error) {
         console.error("Error registering user:", error);
-        res.status(500).json({ error: "Internal server error" });
+
+        // Handle MongoDB duplicate key error (race condition fallback)
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern || {})[0];
+            if (field === "email") {
+                return res.status(409).json({ error: "An account with this email already exists" });
+            }
+            if (field === "username") {
+                return res.status(409).json({ error: "This username is already taken" });
+            }
+            return res.status(409).json({ error: "Account already exists" });
+        }
+
+        res.status(500).json({ error: "Something went wrong. Please try again." });
     }
 }
 
@@ -225,6 +263,7 @@ const verifyEmail = async (req, res) => {
 
         res.status(200).json({
             message: "Email verified successfully",
+            token,
             user: {
                 id: user._id,
                 username: user.username,
@@ -308,9 +347,87 @@ const logout = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: "Email is required" });
+        }
+
+        const user = await User.findOne({ email });
+
+        // Don't reveal if user exists or not for security
+        if (!user) {
+            return res.status(200).json({ message: "If an account exists, a password reset code has been sent" });
+        }
+
+        const otp = user.generateEmailOTP();
+        await user.save();
+
+        const emailResult = await sendPasswordResetEmail(email, otp);
+
+        if (!emailResult?.success) {
+            console.error("Failed to send password reset email:", emailResult?.error);
+        }
+
+        res.status(200).json({ message: "If an account exists, a password reset code has been sent" });
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ error: "Email, OTP, and new password are required" });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: "Password must be at least 6 characters" });
+        }
+
+        const user = await User.findOne({ email }).select("+emailOTP +emailOTPExpires");
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (!user.emailOTP || !user.emailOTPExpires) {
+            return res.status(400).json({ error: "No reset request found. Please request a new one." });
+        }
+
+        if (user.emailOTPExpires < new Date()) {
+            return res.status(400).json({ error: "Reset code has expired. Please request a new one." });
+        }
+
+        const isValid = user.verifyEmailOTP(otp);
+
+        if (!isValid) {
+            return res.status(400).json({ error: "Invalid reset code. Please try again." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        user.emailOTP = undefined;
+        user.emailOTPExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successfully" });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
 export default {
     githubAuth,
-    githubcallback,
+    githubCallback: githubCallback,
     login,
     register,
     verifyEmail,
@@ -319,4 +436,6 @@ export default {
     getUserCommits,
     me,
     logout,
+    forgotPassword,
+    resetPassword,
 }

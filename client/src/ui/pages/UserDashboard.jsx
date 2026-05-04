@@ -87,14 +87,14 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
           <FileText className="w-6 h-6 text-[#37322F]" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Dashboard</h1>
-          <p className="text-sm text-[#605A57]">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] break-words">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-[#605A57]">
             {organization ? `Team: ${organization.organizationName}` : "Join an organization to get started"}
           </p>
         </div>

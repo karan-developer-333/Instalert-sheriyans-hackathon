@@ -349,23 +349,23 @@ export default function OrgDashboard() {
     return (
       <Card className="border-[rgba(55,50,47,0.12)] mt-3">
         <div className="px-5 pt-4 pb-3">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border shrink-0`}>
                   {STATUS_LABELS[incident.status]}
                 </Badge>
-                <span className="flex items-center gap-1 text-xs text-[#605A57]">
+                <span className="flex items-center gap-1 text-xs text-[#605A57] shrink-0">
                   <Clock className="w-3 h-3" />
                   {new Date(incident.createdAt).toLocaleDateString("en-US", {
                     month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
                   })}
                 </span>
               </div>
-              <h3 className="text-lg font-serif font-bold text-[#37322F] mt-2">{incident.title}</h3>
+              <h3 className="text-lg font-serif font-bold text-[#37322F] mt-2 break-words">{incident.title}</h3>
             </div>
-            <div className="flex items-center gap-2 ml-3">
-              <div className="flex items-center gap-2 mr-2">
+            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-[rgba(55,50,47,0.08)]">
+              <div className="flex items-center gap-2 sm:mr-2">
                 <span className="text-xs text-[#605A57]">
                   {incident.status === "closed" ? "Reopen" : "Close"}
                 </span>
@@ -386,16 +386,18 @@ export default function OrgDashboard() {
         </div>
         <Separator className="mx-5" />
         <div className="px-5 pt-4 pb-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-[#605A57]" />
               <h4 className="text-sm font-medium text-[#37322F]">Reports ({incMessages.length})</h4>
             </div>
-            <AIAssistantDialog
-              incidentId={incident._id}
-              onSummarize={incidentService.aiSummarize}
-              onAsk={incidentService.aiAsk}
-            />
+            <div className="w-full sm:w-auto">
+              <AIAssistantDialog
+                incidentId={incident._id}
+                onSummarize={incidentService.aiSummarize}
+                onAsk={incidentService.aiAsk}
+              />
+            </div>
           </div>
 
           {incident.status === "closed" && (
@@ -457,21 +459,21 @@ export default function OrgDashboard() {
   }, [getIncidentMessages, loadingMessages, handleToggleIncidentStatus, handleDeleteIncident, renderMessageContent]);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#37322F]/10 rounded-lg">
+          <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
             <Users className="w-6 h-6 text-[#37322F]" />
           </div>
           <div>
-            <h1 className="text-2xl font-serif font-bold text-[#37322F]">
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] break-words">
               {organization?.organizationName || "Organization"}
             </h1>
-            <p className="text-sm text-[#605A57]">Manage incidents and team members</p>
+            <p className="text-xs sm:text-sm text-[#605A57]">Manage incidents and team members</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -600,11 +602,11 @@ export default function OrgDashboard() {
                         : "border-[rgba(55,50,47,0.12)] hover:bg-[#F7F5F3]"
                     } ${incident.status === "closed" ? "opacity-70" : ""}`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
                       <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-[#605A57]" />
-                        <div>
-                          <p className="text-sm font-medium text-[#37322F]">{incident.title}</p>
+                        <FileText className="w-5 h-5 text-[#605A57] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#37322F] truncate max-w-[200px] sm:max-w-xs">{incident.title}</p>
                           <p className="text-xs text-[#605A57]">
                             {new Date(incident.createdAt).toLocaleDateString("en-US", {
                               month: "short", day: "numeric", year: "numeric",
@@ -612,14 +614,14 @@ export default function OrgDashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>
+                      <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                        <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border shrink-0`}>
                           {STATUS_LABELS[incident.status]}
                         </Badge>
                         {selectedIncident?._id === incident._id ? (
-                          <ChevronUp className="w-4 h-4 text-[#605A57]" />
+                          <ChevronUp className="w-4 h-4 text-[#605A57] shrink-0" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-[#605A57]" />
+                          <ChevronDown className="w-4 h-4 text-[#605A57] shrink-0" />
                         )}
                       </div>
                     </div>

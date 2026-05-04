@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { loginStart, loginSuccess, loginFailure } from "../../store/slices/auth.slice";
-import { authService } from "../../services/auth.service";
+import authService from "../../services/auth.service";
 import { LogIn, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -28,7 +28,7 @@ export default function LoginPage() {
       navigate("/dashboard");
     } catch (err) {
       if (err.requiresVerification) {
-        dispatch(loginFailure(null)); // reset loading state
+        dispatch(loginFailure(null));
         navigate("/auth/verify-email", { state: { email: err.email || form.email } });
       } else {
         dispatch(loginFailure(err.message || "Login failed"));
@@ -113,6 +113,11 @@ export default function LoginPage() {
               Don&apos;t have an account?{" "}
               <Link to="/auth/register" className="text-[#37322F] font-medium hover:underline">
                 Sign up
+              </Link>
+            </p>
+            <p className="text-center text-sm text-[#605A57] mt-2">
+              <Link to="/forgot-password" className="text-[#37322F] hover:underline">
+                Forgot password?
               </Link>
             </p>
           </CardContent>

@@ -51,6 +51,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    updateRole: (state, action) => {
+      state.role = action.payload;
+    },
   },
 });
 

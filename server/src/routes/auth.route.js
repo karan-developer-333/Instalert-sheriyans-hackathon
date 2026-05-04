@@ -16,8 +16,8 @@ router.get('/github', authController.githubAuth);
     @route GET /auth/github/callback
     @desc Handle GitHub OAuth callback and generate JWT token
     @access Public
-*/
-router.get('/github/callback', authController.githubcallback);
+ */
+router.get('/github/callback', authController.githubCallback);
 
 /*
     @route POST /auth/login
@@ -58,8 +58,22 @@ router.post('/verify-email', authController.verifyEmail);
     @route POST /auth/resend-otp
     @desc Resend OTP to email
     @access Public
-*/
+ */
 router.post('/resend-otp', authController.resendOTP);
+
+/*
+    @route POST /auth/forgot-password
+    @desc Send password reset code to email
+    @access Public
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/*
+    @route POST /auth/reset-password
+    @desc Reset password with OTP
+    @access Public
+ */
+router.post('/reset-password', authController.resetPassword);
 
 /*
     @route GET /auth/me

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/slices/auth.slice";
@@ -8,14 +8,17 @@ import {
   FileText,
   LogOut,
   Menu,
+  X,
   ChevronLeft,
   User,
+  KeyRound,
 } from "lucide-react";
 import { ROLES } from "../../utils/constants";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Separator } from "./ui/separator";
+import authService from "../../services/auth.service";
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -23,8 +26,26 @@ export default function Layout() {
   const dispatch = useDispatch();
   const { user, role } = useSelector((state) => state.auth);
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location]);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.error("Logout API error:", e);
+    }
     dispatch(logout());
     navigate("/auth/login");
   };
@@ -50,7 +71,13 @@ export default function Layout() {
       icon: User,
       path: "/dashboard/profile",
     },
-  ];
+     {
+       label: "API Keys",
+       icon: KeyRound,
+       path: "/dashboard/api-keys",
+       roles: [ROLES.ORGANIZATION],
+     },
+   ];
 
   const visibleNav = navItems.filter((item) => !item.roles || item.roles.includes(role));
 
@@ -61,30 +88,64 @@ export default function Layout() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="min-h-screen bg-[#F7F5F3] flex">
+      <div className="h-screen bg-[#F7F5F3] flex">
+        {/* Mobile overlay */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white rounded-lg border border-[rgba(55,50,47,0.12)] shadow-sm"
+        >
+          <Menu className="w-5 h-5 text-[#37322F]" />
+        </button>
+
         <aside
           className={`bg-white border-r border-[rgba(55,50,47,0.12)] flex flex-col transition-all duration-300 ${
-            collapsed ? "w-16" : "w-64"
+            isMobile
+              ? `fixed inset-y-0 left-0 z-50 w-64 transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`
+              : collapsed ? "w-16" : "w-64"
           }`}
         >
           <div className={`flex items-center border-b border-[rgba(55,50,47,0.12)] ${collapsed ? "justify-center px-3" : "px-6"} py-4`}>
-            {!collapsed && (
-              <div>
-                <h1 className="text-xl font-serif font-bold text-[#37322F]">InstaAlert</h1>
-                <p className="text-xs text-[#605A57] capitalize">{role}</p>
+            {isMobile ? (
+              <div className="flex items-center justify-between w-full">
+                <div>
+                  <h1 className="text-xl font-serif font-bold text-[#37322F]">InstaAlert</h1>
+                  <p className="text-xs text-[#605A57] capitalize">{role}</p>
+                </div>
+                <button onClick={() => setMobileOpen(false)}>
+                  <X className="w-5 h-5 text-[#605A57]" />
+                </button>
               </div>
-            )}
-            {collapsed && (
-              <span className="text-lg font-serif font-bold text-[#37322F]">B</span>
+            ) : (
+              <>
+                {!collapsed && (
+                  <div>
+                    <h1 className="text-xl font-serif font-bold text-[#37322F]">InstaAlert</h1>
+                    <p className="text-xs text-[#605A57] capitalize">{role}</p>
+                  </div>
+                )}
+                {collapsed && (
+                  <span className="text-lg font-serif font-bold text-[#37322F]">I</span>
+                )}
+              </>
             )}
           </div>
 
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center justify-center py-2 text-[#605A57] hover:text-[#37322F] transition-colors"
-          >
-            {collapsed ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
+          {!isMobile && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="flex items-center justify-center py-2 text-[#605A57] hover:text-[#37322F] transition-colors"
+            >
+              {collapsed ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          )}
 
           <nav className="flex-1 px-2 py-2 space-y-1">
             {visibleNav.map((item) => {
@@ -158,8 +219,10 @@ export default function Layout() {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-auto">
-          <Outlet />
+        <main className="flex-1 overflow-auto lg:ml-0">
+          <div className="pt-16 lg:pt-0">
+            <Outlet />
+          </div>
         </main>
       </div>
     </TooltipProvider>

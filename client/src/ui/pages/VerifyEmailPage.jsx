@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { verifyEmailStart, verifyEmailSuccess, verifyEmailFailure, clearError } from "../../store/slices/auth.slice";
-import { authService } from "../../services/auth.service";
+import { verifyEmailStart, verifyEmailSuccess, verifyEmailFailure } from "../../store/slices/auth.slice";
+import authService from "../../services/auth.service";
 import { Loader2, AlertCircle, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -15,10 +15,9 @@ export default function VerifyEmailPage() {
 
   const email = location.state?.email || "";
   const [otp, setOTP] = useState("");
-  const [succes, setSuccess] = useState(false);
-  const { loading, error } = useSelector((state) => state.auth);
+  const [success, setSuccess] = useState(false);
+  const { loading, error } = useSelector((state) => state.auth) || {};
 
-  // Redirect to login if no email provided
   useEffect(() => {
     if (!email) {
       navigate("/auth/login");
@@ -51,7 +50,7 @@ export default function VerifyEmailPage() {
     }
   };
 
-  if (succes) {
+  if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F7F5F3] px-4">
         <Card className="border-[rgba(55,50,47,0.12)] shadow-sm w-full max-w-md">

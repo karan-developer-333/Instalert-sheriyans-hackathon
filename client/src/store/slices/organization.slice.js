@@ -8,6 +8,12 @@ const initialState = {
   incidentStats: { chartData: [], recentIncidents: [] },
   loading: false,
   error: null,
+  employeesPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 10,
+  },
 };
 
 const organizationSlice = createSlice({
@@ -27,6 +33,9 @@ const organizationSlice = createSlice({
     fetchEmployeesSuccess: (state, action) => {
       state.loading = false;
       state.employees = action.payload.members || action.payload.employees || [];
+      if (action.payload.pagination) {
+        state.employeesPagination = { ...state.employeesPagination, ...action.payload.pagination };
+      }
       state.memberCount = action.payload.count || state.employees.length;
       state.error = null;
     },
@@ -53,6 +62,14 @@ const organizationSlice = createSlice({
       state.leaderboard = [];
       state.incidentStats = { chartData: [], recentIncidents: [] };
       state.error = null;
+      state.employeesPagination = { currentPage: 1, totalPages: 1, totalCount: 0, limit: 10 };
+    },
+    setEmployeesPage: (state, action) => {
+      state.employeesPagination.currentPage = action.payload;
+    },
+    setEmployeesLimit: (state, action) => {
+      state.employeesPagination.limit = action.payload;
+      state.employeesPagination.currentPage = 1;
     },
   },
 });
@@ -66,5 +83,7 @@ export const {
   setLeaderboard,
   setIncidentStats,
   clearOrg,
+  setEmployeesPage,
+  setEmployeesLimit,
 } = organizationSlice.actions;
 export default organizationSlice.reducer;

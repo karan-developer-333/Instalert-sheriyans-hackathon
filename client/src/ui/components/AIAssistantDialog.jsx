@@ -85,7 +85,7 @@ export default function AIAssistantDialog({ incidentId, onSummarize, onAsk }) {
       <div className="w-12 h-12 rounded-full bg-[#37322F]/5 flex items-center justify-center mb-4">
         <Sparkles className="w-6 h-6 text-[#37322F]" />
       </div>
-      <h3 className="text-sm font-medium text-[#37322F] mb-1">AI Incident Assistant</h3>
+      <h3 className="text-sm font-medium text-[#37322F] mb-1 hidden md:block">AI Incident Assistant</h3>
       <p className="text-xs text-[#605A57] text-center mb-5 max-w-xs">
         Get instant AI-powered insights, summaries, and answers about this incident
       </p>

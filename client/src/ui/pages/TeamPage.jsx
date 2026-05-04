@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { organizationService } from "../../services/organization.service";
-import { fetchEmployeesSuccess, fetchOrgStart, fetchOrgFailure } from "../../store/slices/organization.slice";
+import { fetchEmployeesSuccess, fetchOrgStart, fetchOrgFailure, setEmployeesPage, setEmployeesLimit } from "../../store/slices/organization.slice";
 import { Users, Loader2, AlertCircle, X, Search, UserMinus } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -10,29 +10,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
+import Pagination from "../components/Pagination";
 
 export default function TeamPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { employees, organization, loading, error } = useSelector((state) => state.organization);
+  const { employees, organization, loading, error, employeesPagination } = useSelector((state) => state.organization);
   const { user, role } = useSelector((state) => state.auth);
 
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState(null);
   const [actionError, setActionError] = useState("");
 
-  useEffect(() => {
-    loadTeam();
-  }, []);
-
-  const loadTeam = async () => {
+  const loadTeam = useCallback(async () => {
     dispatch(fetchOrgStart());
     try {
-      const empData = await organizationService.getEmployees();
+      const empData = await organizationService.getEmployees({
+        page: employeesPagination.currentPage,
+        limit: employeesPagination.limit,
+      });
       dispatch(fetchEmployeesSuccess(empData));
     } catch (err) {
       dispatch(fetchOrgFailure(err.message));
     }
+  }, [dispatch, employeesPagination.currentPage, employeesPagination.limit]);
+
+  useEffect(() => {
+    loadTeam();
+  }, [loadTeam]);
+
+  const handlePageChange = (newPage) => {
+    dispatch(setEmployeesPage(newPage));
+  };
+
+  const handleLimitChange = (newLimit) => {
+    dispatch(setEmployeesLimit(newLimit));
   };
 
   const handleRemoveEmployee = async (userId) => {
@@ -54,15 +66,15 @@ export default function TeamPage() {
   );
 
   return (
-    <div className="p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
           <Users className="w-6 h-6 text-[#37322F]" />
         </div>
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Team Members</h1>
-          <p className="text-sm text-[#605A57]">
-            {organization?.organizationName ? organization.organizationName : "All Organizations"} ({employees.length} members)
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] truncate">Team Members</h1>
+          <p className="text-sm text-[#605A57] truncate">
+            {organization?.organizationName ? organization.organizationName : "All Organizations"} ({employeesPagination.totalCount || employees.length} members)
           </p>
         </div>
       </div>
@@ -101,44 +113,93 @@ export default function TeamPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-[rgba(55,50,47,0.12)]">
-          <CardContent className="p-0">
-            {filteredEmployees.map((emp, i) => (
-              <div key={emp._id}>
-                {i > 0 && <Separator />}
-                <div className="flex items-center justify-between px-6 py-4 hover:bg-[#F7F5F3] transition-colors">
+        <>
+          <div className="space-y-3 sm:hidden">
+            {filteredEmployees.map((emp) => (
+              <Card key={emp._id} className="border-[rgba(55,50,47,0.12)]">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 shrink-0">
                       <AvatarFallback className="bg-[#37322F] text-white text-sm">
                         {emp.username?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-[#37322F]">{emp.username}</p>
-                      <p className="text-xs text-[#605A57]">{emp.email}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#37322F] truncate">{emp.username}</p>
+                      <p className="text-xs text-[#605A57] truncate">{emp.email}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant={emp.organizationRole === "owner" ? "default" : "outline"}>
+                          {emp.organizationRole || emp.role}
+                        </Badge>
+                        {role === "organization" && emp.organizationRole !== "owner" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveEmployee(emp._id)}
+                            disabled={removing === emp._id}
+                            className="text-[#605A57] hover:text-red-600 hover:bg-red-50 ml-auto"
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={emp.organizationRole === "owner" ? "default" : "outline"}>
-                      {emp.organizationRole || emp.role}
-                    </Badge>
-                    {role === "organization" && emp.organizationRole !== "owner" && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveEmployee(emp._id)}
-                        disabled={removing === emp._id}
-                        className="text-[#605A57] hover:text-red-600 hover:bg-red-50"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="hidden sm:block">
+            <Card className="border-[rgba(55,50,47,0.12)]">
+              <CardContent className="p-0">
+                {filteredEmployees.map((emp, index) => (
+                  <div key={emp._id}>
+                    {index > 0 && <Separator />}
+                    <div className="flex items-center justify-between px-6 py-4 hover:bg-[#F7F5F3] transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-10 h-10 shrink-0">
+                          <AvatarFallback className="bg-[#37322F] text-white text-sm">
+                            {emp.username?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#37322F] truncate">{emp.username}</p>
+                          <p className="text-xs text-[#605A57] truncate">{emp.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Badge variant={emp.organizationRole === "owner" ? "default" : "outline"}>
+                          {emp.organizationRole || emp.role}
+                        </Badge>
+                        {role === "organization" && emp.organizationRole !== "owner" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveEmployee(emp._id)}
+                            disabled={removing === emp._id}
+                            className="text-[#605A57] hover:text-red-600 hover:bg-red-50"
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Pagination
+            currentPage={employeesPagination.currentPage}
+            totalPages={employeesPagination.totalPages}
+            totalCount={employeesPagination.totalCount}
+            limit={employeesPagination.limit}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
+          />
+        </>
       )}
     </div>
   );

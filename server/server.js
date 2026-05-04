@@ -1,14 +1,22 @@
-import {io,server} from './src/socket/socket.js';
-import connectDB from "./src/config/db.js";
-import cronScoreService from "./src/services/cronScore.service.js";
+import { config } from 'dotenv';
+config({ path: './.env' });
 
+import { initSocket } from './src/socket/socket.js';
+import connectDB from "./src/config/db.js";
+import aiScoreService from "./src/services/aiScore.service.js";
+import app from "./src/app.js";
 
 const PORT = process.env.PORT || 3001;
 
-connectDB()
+const start = async () => {
+  await connectDB();
 
+  const { server } = initSocket(app);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  cronScoreService.checkAndResetMonthlyScores();
-});
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    aiScoreService.resetMonthlyScores();
+  });
+};
+
+start();

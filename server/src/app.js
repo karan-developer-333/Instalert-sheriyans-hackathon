@@ -14,21 +14,24 @@ import adminRoutes from './routes/admin.route.js';
 import userRoutes from './routes/user.route.js';
 import organizationRoutes from './routes/organization.route.js';
 import incidentRoutes from './routes/incident.route.js';
+import errorRoutes from './routes/error.route.js';
+import apiKeyRoutes from './routes/apikey.route.js';
 
 
 const app = express();
 
-// create a write stream (in append mode)
-
 // setup the logger
 app.use(morgan('dev'))
 
-app.use(cors({
+const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  methods:["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders:["Content-type","Authorization"],
-  credentials: true
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  exposedHeaders: ['Set-Cookie']
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,5 +46,7 @@ app.use('/admin', adminRoutes);
 app.use('/user', userRoutes);
 app.use('/organization', organizationRoutes);
 app.use('/incidents', incidentRoutes);
+app.use('/api/error', errorRoutes);
+app.use('/apikey', apiKeyRoutes);
 
 export default app;

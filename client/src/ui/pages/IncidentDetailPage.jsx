@@ -1,49 +1,41 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { setSelectedIncident } from "../../store/slices/incident.slice";
 import { incidentService } from "../../services/incident.service";
-import { organizationService } from "../../services/organization.service";
 import ChatBox from "../components/ChatBox";
 import { getSocket, joinOrganization } from "../../utils/socket/socket";
-import { ArrowLeft, Loader2, AlertCircle, X } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
+import { MarkdownRenderer } from "../components/MarkdownRenderer";
 import { STATUS_LABELS, STATUS_COLORS } from "../../utils/constants";
 
 export default function IncidentDetailPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
-  const { selectedIncident } = useSelector((state) => state.incident);
-  const { organization } = useSelector((state) => state.organization);
-  const { user } = useSelector((state) => state.auth);
 
-  const [incident, setIncident] = useState(selectedIncident || null);
-  const [loading, setLoading] = useState(!selectedIncident);
+  const [incident, setIncident] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!selectedIncident) {
-      loadIncident();
-    }
+    loadIncident();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
     const socket = getSocket();
-    if (organization?.organizationJoinCode) {
-      joinOrganization(organization.organizationJoinCode);
-    }
-  }, [organization]);
+    joinOrganization(incident?.organization?.organizationJoinCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incident?.organization?._id]);
 
   const loadIncident = async () => {
     setLoading(true);
     try {
       const data = await incidentService.getIncident(id);
       setIncident(data);
-      dispatch(setSelectedIncident(data));
+      setSelectedIncident(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,7 +88,9 @@ export default function IncidentDetailPage() {
             </CardHeader>
             <Separator className="mx-6" />
             <CardContent className="pt-6">
-              <p className="text-[#49423D] whitespace-pre-wrap">{incident.description}</p>
+              <div className="text-[#49423D] whitespace-pre-wrap markdown-content max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[rgba(55,50,47,0.2)] scrollbar-track-transparent">
+                <MarkdownRenderer content={incident.description} />
+              </div>
             </CardContent>
           </Card>
         </div>

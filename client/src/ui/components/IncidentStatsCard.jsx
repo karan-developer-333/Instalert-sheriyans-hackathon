@@ -10,10 +10,6 @@ export default function IncidentStatsCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
   const loadStats = async () => {
     setLoading(true);
     setError("");
@@ -26,6 +22,11 @@ export default function IncidentStatsCard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const maxCount = Math.max(...chartData.map((d) => d.count), 1);
 

@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const authService = {
+const authService = {
   login: async (credentials) => {
     const { data } = await api.post("/auth/login", credentials);
     return data;
@@ -21,30 +21,25 @@ export const authService = {
     return data;
   },
 
-  githubLogin: () => {
-    window.location.href = `${import.meta.env.VITE_SERVER_URL || "http://localhost:3001"}/auth/github`;
+  forgotPassword: async (email) => {
+    const { data } = await api.post("/auth/forgot-password", { email });
+    return data;
+  },
+
+  resetPassword: async (email, otp, newPassword) => {
+    const { data } = await api.post("/auth/reset-password", { email, otp, newPassword });
+    return data;
+  },
+
+  logout: async () => {
+    const { data } = await api.post("/auth/logout");
+    return data;
   },
 
   getMe: async () => {
     const { data } = await api.get("/auth/me");
     return data;
   },
-
-  logout: async () => {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      window.location.href = "/auth/login";
-    }
-  },
-
-  getRepos: async () => {
-    const { data } = await api.get("/auth/repos");
-    return data;
-  },
-
-  getCommits: async () => {
-    const { data } = await api.get("/auth/commits");
-    return data;
-  },
 };
+
+export default authService;

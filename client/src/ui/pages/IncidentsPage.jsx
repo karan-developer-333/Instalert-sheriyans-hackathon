@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchIncidentsStart, fetchIncidentsSuccess, fetchIncidentsFailure,
-  addIncident, updateIncident, removeIncident,
+  addIncident, updateIncident, removeIncident, setPage, setLimit,
 } from "../../store/slices/incident.slice";
 import { clearMessages } from "../../store/slices/socket.slice";
 import { incidentService } from "../../services/incident.service";
@@ -10,6 +10,7 @@ import { organizationService } from "../../services/organization.service";
 import { getSocket, joinOrganization } from "../../utils/socket/socket";
 import { ROLES, STATUS_LABELS, STATUS_COLORS } from "../../utils/constants";
 import IncidentDetailView from "../components/IncidentDetailView";
+import Pagination from "../components/Pagination";
 import {
   FileText, Loader2, AlertCircle, X, ChevronRight, Building2,
 } from "lucide-react";
@@ -18,7 +19,7 @@ import { Card, CardContent } from "../components/ui/card";
 
 export default function IncidentsPage() {
   const dispatch = useDispatch();
-  const { incidents, loading: incidentsLoading } = useSelector((state) => state.incident);
+  const { incidents, loading: incidentsLoading, pagination } = useSelector((state) => state.incident);
   const { role } = useSelector((state) => state.auth);
 
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -29,19 +30,22 @@ export default function IncidentsPage() {
   const loadIncidents = useCallback(async () => {
     dispatch(fetchIncidentsStart());
     try {
-      const data = await incidentService.getIncidents();
+      const data = await incidentService.getIncidents({
+        page: pagination.currentPage,
+        limit: pagination.limit,
+      });
       dispatch(fetchIncidentsSuccess(data));
     } catch (err) {
       dispatch(fetchIncidentsFailure(err.message));
     }
-  }, [dispatch]);
+  }, [dispatch, pagination.currentPage, pagination.limit]);
 
   const loadOrg = useCallback(async () => {
     setLoadingOrg(true);
     try {
       let orgResult;
       if (role === ROLES.ORGANIZATION) {
-        orgResult = await organizationService.getMyOwnOrg();
+        orgResult = await organizationService.getOrganization();
       } else {
         orgResult = await organizationService.getMyOrg();
       }
@@ -57,6 +61,14 @@ export default function IncidentsPage() {
     loadIncidents();
     loadOrg();
   }, [loadIncidents, loadOrg]);
+
+  const handlePageChange = (newPage) => {
+    dispatch(setPage(newPage));
+  };
+
+  const handleLimitChange = (newLimit) => {
+    dispatch(setLimit(newLimit));
+  };
 
   useEffect(() => {
     const socket = getSocket();
@@ -105,7 +117,7 @@ export default function IncidentsPage() {
 
   if (loadingOrg) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="p-4 sm:p-8 flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
       </div>
     );
@@ -113,7 +125,7 @@ export default function IncidentsPage() {
 
   if (!orgData) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Card className="border-[rgba(55,50,47,0.12)]">
           <CardContent className="text-center py-12">
             <Building2 className="w-12 h-12 text-[#605A57]/30 mx-auto mb-3" />
@@ -125,14 +137,14 @@ export default function IncidentsPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
           <FileText className="w-6 h-6 text-[#37322F]" />
         </div>
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Incidents</h1>
-          <p className="text-sm text-[#605A57]">{orgData.organizationName}</p>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F] truncate">Incidents</h1>
+          <p className="text-sm text-[#605A57] truncate">{orgData.organizationName}</p>
         </div>
       </div>
 
@@ -158,51 +170,62 @@ export default function IncidentsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className={`space-y-2 ${selectedIncident ? "lg:col-span-2" : "lg:col-span-5"}`}>
-            {incidents.map((incident) => (
-              <button
-                key={incident._id}
-                onClick={() => handleSelectIncident(incident)}
-                className={`w-full text-left bg-white border rounded-lg px-5 py-4 transition-all ${
-                  selectedIncident?._id === incident._id
-                    ? "border-[#37322F] shadow-sm bg-[#F7F5F3]"
-                    : "border-[rgba(55,50,47,0.12)] hover:bg-[#F7F5F3]"
-                } ${incident.status === "closed" ? "opacity-60" : ""}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className={`w-5 h-5 ${incident.status === "closed" ? "text-[#605A57]/50" : "text-[#605A57]"}`} />
-                    <div>
-                      <p className="text-sm font-medium text-[#37322F]">{incident.title}</p>
-                      <p className="text-xs text-[#605A57]">
-                        {new Date(incident.createdAt).toLocaleDateString("en-US", {
-                          month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
-                        })}
-                      </p>
+        <>
+          <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${selectedIncident ? "lg:grid-cols-5" : ""}`}>
+            <div className={`space-y-2 ${selectedIncident ? "lg:col-span-2" : ""}`}>
+              {incidents.map((incident) => (
+                <button
+                  key={incident._id}
+                  onClick={() => handleSelectIncident(incident)}
+                  className={`w-full text-left bg-white border rounded-lg px-4 sm:px-5 py-3 sm:py-4 transition-all ${
+                    selectedIncident?._id === incident._id
+                      ? "border-[#37322F] shadow-sm bg-[#F7F5F3]"
+                      : "border-[rgba(55,50,47,0.12)] hover:bg-[#F7F5F3]"
+                  } ${incident.status === "closed" ? "opacity-60" : ""}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className={`w-5 h-5 shrink-0 ${incident.status === "closed" ? "text-[#605A57]/50" : "text-[#605A57]"}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[#37322F] truncate">{incident.title}</p>
+                        <p className="text-xs text-[#605A57]">
+                          {new Date(incident.createdAt).toLocaleDateString("en-US", {
+                            month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>
+                        {STATUS_LABELS[incident.status]}
+                      </Badge>
+                      <ChevronRight className="w-4 h-4 text-[#605A57]" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>
-                      {STATUS_LABELS[incident.status]}
-                    </Badge>
-                    <ChevronRight className="w-4 h-4 text-[#605A57]" />
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
+
+            {selectedIncident && (
+              <div className="lg:col-span-3">
+                <IncidentDetailView
+                  incident={selectedIncident}
+                  onClose={handleCloseDetail}
+                  orgJoinCode={orgData.organizationJoinCode}
+                />
+              </div>
+            )}
           </div>
 
-          {selectedIncident && (
-            <div className="lg:col-span-3">
-              <IncidentDetailView
-                incident={selectedIncident}
-                onClose={handleCloseDetail}
-                orgJoinCode={orgData.organizationJoinCode}
-              />
-            </div>
-          )}
-        </div>
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalCount={pagination.totalCount}
+            limit={pagination.limit}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
+          />
+        </>
       )}
     </div>
   );

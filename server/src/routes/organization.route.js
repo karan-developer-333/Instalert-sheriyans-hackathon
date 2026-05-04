@@ -71,7 +71,45 @@ router.post("/ai-assistant", validateUser, validateAccessMiddleware.validateOrga
     @route POST /organization/ai-execute-action
     @desc Execute an action suggested by org AI assistant
     @access Private (org owner only)
-*/
+ */
 router.post("/ai-execute-action", validateUser, validateAccessMiddleware.validateOrganization, orgAIController.executeOrgAIAction);
+
+/*
+    @route POST /organization/ai-prompt
+    @desc Save custom AI prompt for error analysis
+    @access Private (org owner only)
+ */
+router.post("/ai-prompt", validateUser, validateAccessMiddleware.validateOrganization, async (req, res) => {
+  try {
+    const { customPrompt } = req.body;
+    const Organization = (await import("../models/organization.model.js")).default;
+    const org = await Organization.findOne({ owner: req.user.id });
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+    org.customAiPrompt = customPrompt || "";
+    await org.save();
+    res.json({ message: "AI prompt updated successfully" });
+  } catch (error) {
+    console.error("Save AI prompt error:", error);
+    res.status(500).json({ message: "Failed to update AI prompt" });
+  }
+});
+
+/*
+    @route GET /organization/ai-prompt
+    @desc Get custom AI prompt for error analysis
+    @access Private (org owner only)
+ */
+router.get("/ai-prompt", validateUser, validateAccessMiddleware.validateOrganization, async (req, res) => {
+  try {
+    const Organization = (await import("../models/organization.model.js")).default;
+    const org = await Organization.findOne({ owner: req.user.id }).select("+customAiPrompt");
+    res.json({ customPrompt: org?.customAiPrompt || "" });
+  } catch (error) {
+    console.error("Get AI prompt error:", error);
+    res.status(500).json({ message: "Failed to get AI prompt" });
+  }
+});
 
 export default router;

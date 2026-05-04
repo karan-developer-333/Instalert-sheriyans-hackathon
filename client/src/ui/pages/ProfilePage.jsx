@@ -10,7 +10,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <p className="text-[#605A57]">No profile data available.</p>
       </div>
     );
@@ -23,13 +23,13 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
           <User className="w-6 h-6 text-[#37322F]" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Profile</h1>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F]">Profile</h1>
           <p className="text-sm text-[#605A57]">Your account information</p>
         </div>
       </div>
@@ -42,9 +42,9 @@ export default function ProfilePage() {
                 {user.username?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <CardTitle className="text-xl">{user.username}</CardTitle>
-              <CardDescription>{user.email}</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="text-xl truncate">{user.username}</CardTitle>
+              <CardDescription className="truncate">{user.email}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -53,23 +53,23 @@ export default function ProfilePage() {
 
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-[#605A57]" />
-              <div>
+              <User className="w-5 h-5 text-[#605A57] shrink-0" />
+              <div className="min-w-0">
                 <p className="text-xs text-[#605A57] uppercase tracking-wide">Username</p>
-                <p className="text-sm font-medium text-[#37322F]">{user.username}</p>
+                <p className="text-sm font-medium text-[#37322F] truncate">{user.username}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-[#605A57]" />
-              <div>
+              <Mail className="w-5 h-5 text-[#605A57] shrink-0" />
+              <div className="min-w-0">
                 <p className="text-xs text-[#605A57] uppercase tracking-wide">Email</p>
-                <p className="text-sm font-medium text-[#37322F]">{user.email}</p>
+                <p className="text-sm font-medium text-[#37322F] truncate">{user.email}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-[#605A57]" />
+              <Shield className="w-5 h-5 text-[#605A57] shrink-0" />
               <div>
                 <p className="text-xs text-[#605A57] uppercase tracking-wide">Role</p>
                 <Badge className={`mt-1 capitalize ${roleColor[user.role] || roleColor.user}`}>

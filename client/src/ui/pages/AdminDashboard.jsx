@@ -37,13 +37,13 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[#37322F]/10 rounded-lg">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="p-2 bg-[#37322F]/10 rounded-lg shrink-0">
           <Building2 className="w-6 h-6 text-[#37322F]" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#37322F]">Admin Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#37322F]">Admin Dashboard</h1>
           <p className="text-sm text-[#605A57]">Create and manage organizations</p>
         </div>
       </div>

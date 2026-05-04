@@ -3,11 +3,14 @@ import Referer from "../models/referer.model.js";
 import UserModel from "../models/user.model.js";
 import IncidentModel from "../models/incident.model.js";
 
-// Get all employees/members of an organization
+// Get all employees/members of an organization (with pagination)
 // Accessible by: organization owner, user, employee (any member of the org)
 export const getEmployees = async (req, res) => {
     try {
         const userId = req.user._id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page -1) * limit;
 
         const userReferers = await Referer.find({ referer: userId })
             .populate('organization');
@@ -78,11 +81,16 @@ export const getEmployees = async (req, res) => {
             }
         }
 
+        const totalCount = allMembers.length;
+        const totalPages = Math.ceil(totalCount / limit);
+        const paginatedMembers = allMembers.slice(skip, skip + limit);
+
         res.status(200).json({
             message: "Employees fetched successfully",
-            count: allMembers.length,
-            members: allMembers,
-            organizations
+            count: totalCount,
+            members: paginatedMembers,
+            organizations,
+            pagination: { currentPage: page, totalPages, totalCount }
         });
 
     } catch (error) {
