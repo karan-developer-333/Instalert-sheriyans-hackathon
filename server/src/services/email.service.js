@@ -17,30 +17,52 @@ const markdownStyles = `
 </style>
 `;
 const createTransporter = () => {
-    if (process.env.GOOGLE_REFESH_TOKEN && process.env.GOOGLE_CLINT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_USER) {
+    const {
+        GOOGLE_REFRESH_TOKEN,
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        GOOGLE_USER,
+        EMAIL_FROM,
+        EMAIL_PASSWORD
+    } = process.env;
+
+    // ✅ OAuth2 Transport (Preferred)
+    if (
+        GOOGLE_REFRESH_TOKEN &&
+        GOOGLE_CLIENT_ID &&
+        GOOGLE_CLIENT_SECRET &&
+        GOOGLE_USER
+    ) {
         return nodemailer.createTransport({
-            host: 'smtp.gmail.com', 
-            port: 465,              
-            secure: true,           
-            service: "Gmail",
+            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 587,           // 🔥 changed from 465
+            secure: false,       // 🔥 required for 587
             auth: {
                 type: "OAuth2",
-                user: process.env.GOOGLE_USER,
-                clientId: process.env.GOOGLE_CLINT_ID,
-                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                refreshToken: process.env.GOOGLE_REFESH_TOKEN,
+                user: GOOGLE_USER,
+                clientId: GOOGLE_CLIENT_ID,
+                clientSecret: GOOGLE_CLIENT_SECRET,
+                refreshToken: GOOGLE_REFRESH_TOKEN,
+            },
+            tls: {
+                rejectUnauthorized: false,
             },
         });
     }
 
+    // ✅ Fallback (App Password method)
     return nodemailer.createTransport({
-        host: 'smtp.gmail.com', 
-        port: 465,              
-        secure: true,           
-        service: "Gmail",
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,           // 🔥 changed
+        secure: false,
         auth: {
-            user: process.env.EMAIL_FROM || process.env.GOOGLE_USER,
-            pass: process.env.EMAIL_PASSWORD || "",
+            user: EMAIL_FROM || GOOGLE_USER,
+            pass: EMAIL_PASSWORD, // ⚠️ must be Gmail App Password
+        },
+        tls: {
+            rejectUnauthorized: false,
         },
     });
 };
