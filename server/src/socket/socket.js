@@ -7,7 +7,7 @@ import OrganizationModel from '../models/organization.model.js';
 import Referer from '../models/referer.model.js';
 import UserModel from '../models/user.model.js';
 import aiScoreService from '../services/aiScore.service.js';
-import { sendIncidentNotification } from '../services/email.service.js';
+import { sendIncidentNotification } from '../services/email-client.js';
 
 const ALLOWED_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',')

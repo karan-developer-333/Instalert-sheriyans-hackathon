@@ -6,7 +6,7 @@ import MessageModel from "../models/message.model.js";
 import aiService from "../services/orgAI.service.js";
 import aiScoreService from "../services/aiScore.service.js";
 import { io } from "../socket/socket.js";
-import { sendIncidentNotification } from "../services/email.service.js";
+import { sendIncidentNotification } from "../services/email-client.js";
 
 // Get all incidents for organizations the user belongs to (with pagination)
 export const getIncidents = async (req, res) => {

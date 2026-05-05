@@ -153,6 +153,59 @@ const getContentString = (content) => {
     return "";
 };
 
+const SUGGESTION_PROMPT = `You are an AI Organization Management Assistant. Based on the organization context provided, generate exactly 3 actionable suggestions that the org owner might want to take.
+
+Rules:
+- Suggestions should be specific and actionable
+- Format each suggestion as a short command-like phrase (e.g., "Remove the user Aman", "Create an incident for database crash of redis in Delhi aws")
+- Base suggestions on actual data from the org context (low scoring users, recent incidents, patterns)
+- Make them realistic and relevant to the organization's current state
+- Return ONLY a JSON array of strings, nothing else
+
+Example output:
+["Remove the user Aman", "Create an incident for database crash of redis in Delhi aws", "Review performance of users with low scores"]`;
+
+export const generateSuggestions = async (orgContext) => {
+    try {
+        const contextText = buildContextText(orgContext);
+
+        const response = await client.chat.complete({
+            model: "mistral-small-latest",
+            messages: [
+                { role: "system", content: SUGGESTION_PROMPT },
+                { role: "user", content: contextText },
+            ],
+            maxTokens: 512,
+        });
+
+        const message = response.choices?.[0]?.message;
+        const content = getContentString(message?.content) || "";
+
+        try {
+            const jsonMatch = content.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                const suggestions = JSON.parse(jsonMatch[0]);
+                return suggestions.filter(s => typeof s === 'string' && s.trim()).map(s => s.trim());
+            }
+        } catch (e) {
+            console.log("orgAI: Failed to parse suggestions, using fallback");
+        }
+
+        return [
+            "Remove a low-performing team member",
+            "Create an incident for recent issues",
+            "Review team performance trends"
+        ];
+    } catch (error) {
+        console.error("orgAI: Failed to generate suggestions:", error);
+        return [
+            "Remove a low-performing team member",
+            "Create an incident for recent issues",
+            "Review team performance trends"
+        ];
+    }
+};
+
 export const askMistral = async (systemPrompt, userMessage) => {
     const response = await client.chat.complete({
         model: "mistral-small-latest",
@@ -170,4 +223,5 @@ export const askMistral = async (systemPrompt, userMessage) => {
 export default {
     analyzeOrgRequest,
     askMistral,
+    generateSuggestions,
 };

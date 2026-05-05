@@ -66,6 +66,59 @@ export const orgAIAssistant = async (req, res) => {
     }
 };
 
+export const getAISuggestions = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const org = await OrganizationModel.findOne({ owner: userId });
+        if (!org) {
+            return res.status(403).json({ error: "You do not own an organization" });
+        }
+
+        const orgReferers = await Referer.find({ organization: org._id })
+            .populate('referer', 'username email role working_score');
+
+        const members = orgReferers.map(ref => ({
+            _id: ref.referer._id.toString(),
+            username: ref.referer.username,
+            email: ref.referer.email,
+            role: ref.referer.role,
+            working_score: ref.referer.working_score || 0,
+            status: ref.referer.status || 'active',
+        }));
+
+        const totalIncidents = await IncidentModel.countDocuments({ organization: org._id });
+
+        const recentIncidents = await IncidentModel.find({ organization: org._id })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('title status createdAt');
+
+        const orgContext = {
+            orgName: org.organizationName,
+            ownerName: req.user.username,
+            joinCode: org.organizationJoinCode,
+            members,
+            recentIncidents: recentIncidents.map(inc => ({
+                title: inc.title,
+                status: inc.status,
+                createdAt: new Date(inc.createdAt).toLocaleDateString(),
+            })),
+            totalIncidents,
+        };
+
+        const suggestions = await orgAIService.generateSuggestions(orgContext);
+
+        res.status(200).json({
+            message: "AI suggestions generated successfully",
+            suggestions,
+        });
+    } catch (error) {
+        console.error("Error in getAISuggestions:", error);
+        res.status(500).json({ error: "Failed to generate AI suggestions" });
+    }
+};
+
 export const executeOrgAIAction = async (req, res) => {
     try {
         const { actionType, params } = req.body;
@@ -131,4 +184,5 @@ export const executeOrgAIAction = async (req, res) => {
 export default {
     orgAIAssistant,
     executeOrgAIAction,
+    getAISuggestions,
 };

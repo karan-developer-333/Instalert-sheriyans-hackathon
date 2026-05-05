@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Sparkles, Loader2, X, Send, Building2, CheckCircle, UserMinus, AlertTriangle } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Sparkles, Loader2, X, Send, Building2, CheckCircle, UserMinus, AlertTriangle, Lightbulb } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -13,6 +13,23 @@ export default function OrgAIBubble() {
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (open && chatHistory.length === 0 && suggestions.length === 0 && !loadingSuggestions) {
+      setLoadingSuggestions(true);
+      organizationService.getAISuggestions()
+        .then((res) => setSuggestions(res.suggestions || []))
+        .catch((err) => console.error("Failed to fetch suggestions:", err))
+        .finally(() => setLoadingSuggestions(false));
+    }
+  }, [open]);
+
+  const handleSuggestionClick = useCallback((suggestion) => {
+    setMessage(suggestion);
+    setSuggestions([]);
+  }, []);
 
   const handleAsk = useCallback(async () => {
     if (!message.trim()) return;
@@ -177,13 +194,54 @@ export default function OrgAIBubble() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {chatHistory.length === 0 && (
+        {chatHistory.length === 0 && suggestions.length === 0 && !loadingSuggestions && (
           <div className="text-center py-6">
             <div className="w-10 h-10 rounded-full bg-[#37322F]/5 flex items-center justify-center mx-auto mb-3">
               <Sparkles className="w-5 h-5 text-[#37322F]" />
             </div>
             <p className="text-sm text-[#37322F] font-medium mb-1">How can I help?</p>
             <p className="text-xs text-[#605A57]">Ask about team members, suggest incidents, or manage your org</p>
+          </div>
+        )}
+
+        {chatHistory.length === 0 && loadingSuggestions && (
+          <div className="text-center py-6">
+            <div className="w-10 h-10 rounded-full bg-[#37322F]/5 flex items-center justify-center mx-auto mb-3">
+              <Lightbulb className="w-5 h-5 text-[#37322F] animate-pulse" />
+            </div>
+            <p className="text-sm text-[#37322F] font-medium mb-1">Generating suggestions...</p>
+            <div className="flex items-center justify-center gap-1 mt-2">
+              <Loader2 className="w-3 h-3 animate-spin text-[#605A57]" />
+              <span className="text-xs text-[#605A57]">Analyzing your org</span>
+            </div>
+          </div>
+        )}
+
+        {chatHistory.length === 0 && suggestions.length > 0 && (
+          <div className="space-y-3">
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-full bg-[#37322F]/5 flex items-center justify-center mx-auto mb-3">
+                <Lightbulb className="w-5 h-5 text-amber-500" />
+              </div>
+              <p className="text-sm text-[#37322F] font-medium mb-1">AI Suggestions</p>
+              <p className="text-xs text-[#605A57]">Click a suggestion to act on it</p>
+            </div>
+            <div className="space-y-2">
+              {suggestions.map((suggestion, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="w-full text-left bg-[#F7F5F3] hover:bg-[#37322F]/10 border border-[rgba(55,50,47,0.08)] rounded-lg px-3 py-2.5 transition-all hover:shadow-sm group"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[#37322F]/10 text-[#37322F] text-xs font-semibold flex items-center justify-center shrink-0 group-hover:bg-[#37322F] group-hover:text-white transition-colors">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm text-[#49423D] group-hover:text-[#37322F]">{suggestion}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

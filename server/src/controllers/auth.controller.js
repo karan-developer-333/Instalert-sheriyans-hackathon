@@ -3,7 +3,7 @@ import githubService from "../services/github.service.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 import {config} from "dotenv";
-import { sendVerificationEmail, sendIncidentNotification, sendPasswordResetEmail } from "../services/email.service.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email-client.js";
 
 config();
 

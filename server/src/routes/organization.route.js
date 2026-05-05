@@ -75,6 +75,13 @@ router.post("/ai-assistant", validateUser, validateAccessMiddleware.validateOrga
 router.post("/ai-execute-action", validateUser, validateAccessMiddleware.validateOrganization, orgAIController.executeOrgAIAction);
 
 /*
+    @route GET /organization/ai-suggestions
+    @desc Get proactive AI suggestions for org management
+    @access Private (org owner only)
+ */
+router.get("/ai-suggestions", validateUser, validateAccessMiddleware.validateOrganization, orgAIController.getAISuggestions);
+
+/*
     @route POST /organization/ai-prompt
     @desc Save custom AI prompt for error analysis
     @access Private (org owner only)

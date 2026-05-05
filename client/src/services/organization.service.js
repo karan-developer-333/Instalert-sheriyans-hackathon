@@ -55,6 +55,11 @@ const saveAIPrompt = async (customPrompt) => {
   return data;
 };
 
+const getAISuggestions = async () => {
+  const { data } = await api.get("/organization/ai-suggestions");
+  return data;
+};
+
 const organizationService = {
   createOrganization,
   getMyOrg,
@@ -67,6 +72,7 @@ const organizationService = {
   executeOrgAIAction,
   getAIPrompt,
   saveAIPrompt,
+  getAISuggestions,
 };
 
 export { organizationService };

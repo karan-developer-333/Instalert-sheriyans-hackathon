@@ -1,6 +1,6 @@
 import Incident from '../models/incident.model.js';
 import errorAi from '../services/errorAi.service.js';
-import * as emailService from '../services/email.service.js';
+import * as emailService from '../services/email-client.js';
 import Organization from '../models/organization.model.js';
 
 const reportError = async (req, res) => {

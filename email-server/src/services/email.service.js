@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
-import { config } from "dotenv";
 import { marked } from "marked";
-config();
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const markdownStyles = `
 <style>
@@ -16,60 +17,42 @@ const markdownStyles = `
   .markdown-body pre code { background: transparent; padding: 0; }
 </style>
 `;
-const createTransporter = () => {
-    const {
-        GOOGLE_REFRESH_TOKEN,
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET,
-        GOOGLE_USER,
-        EMAIL_FROM,
-        EMAIL_PASSWORD
-    } = process.env;
 
-    // ✅ OAuth2 Transport (Preferred)
-    if (
-        GOOGLE_REFRESH_TOKEN &&
-        GOOGLE_CLIENT_ID &&
-        GOOGLE_CLIENT_SECRET &&
-        GOOGLE_USER
-    ) {
+const createTransporter = () => {
+    const user = process.env.GOOGLE_USER || process.env.EMAIL_FROM;
+    const oauth2Config = {
+        type: "OAuth2",
+        user,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+    };
+
+    if (user && oauth2Config.clientId && oauth2Config.clientSecret && oauth2Config.refreshToken) {
         return nodemailer.createTransport({
-            service: "gmail",
-            host: "smtp.gmail.com",
-            port: 587,           // 🔥 changed from 465
-            secure: false,       // 🔥 required for 587
+            service: "Gmail",
+            auth: oauth2Config,
+        });
+    }
+
+    if (user && process.env.EMAIL_PASSWORD) {
+        return nodemailer.createTransport({
+            service: "Gmail",
             auth: {
-                type: "OAuth2",
-                user: GOOGLE_USER,
-                clientId: GOOGLE_CLIENT_ID,
-                clientSecret: GOOGLE_CLIENT_SECRET,
-                refreshToken: GOOGLE_REFRESH_TOKEN,
-            },
-            tls: {
-                rejectUnauthorized: false,
+                user,
+                pass: process.env.EMAIL_PASSWORD,
             },
         });
     }
 
-    // ✅ Fallback (App Password method)
-    return nodemailer.createTransport({
-        service: "gmail",
-        host: "smtp.gmail.com",
-        port: 587,           // 🔥 changed
-        secure: false,
-        auth: {
-            user: EMAIL_FROM || GOOGLE_USER,
-            pass: EMAIL_PASSWORD, // ⚠️ must be Gmail App Password
-        },
-        tls: {
-            rejectUnauthorized: false,
-        },
-    });
+    throw new Error(
+        "Missing Gmail auth config. Set GOOGLE_USER + GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN for OAuth2, or provide EMAIL_PASSWORD for basic auth."
+    );
 };
 
 const transporter = createTransporter();
 
-export const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html }) => {
     try {
         const from = process.env.EMAIL_FROM || process.env.GOOGLE_USER || "noreply@instaalert.com";
         const info = await transporter.sendMail({
@@ -78,15 +61,15 @@ export const sendEmail = async ({ to, subject, html }) => {
             subject,
             html,
         });
-        console.log("Email sent:", info.messageId);
+        console.log("[Email] Sent:", info.messageId);
         return { success: true, messageId: info.messageId };
     } catch (error) {
-        console.error("Email send error:", error);
+        console.error("[Email] Send error:", error);
         return { success: false, error: error.message };
     }
 };
 
-export const sendVerificationEmail = async (to, otp) => {
+export const sendVerification = async (to, otp) => {
     const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #F7F5F3; border-radius: 12px; border: 1px solid rgba(55,50,47,0.12);">
       <div style="text-align: center; margin-bottom: 24px;">
@@ -104,6 +87,26 @@ export const sendVerificationEmail = async (to, otp) => {
     </div>
     `;
     return sendEmail({ to, subject: "Verify your email - InstaAlert", html });
+};
+
+export const sendPasswordReset = async (to, otp) => {
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #F7F5F3; border-radius: 12px; border: 1px solid rgba(55,50,47,0.12);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="font-family: 'Instrument Serif', serif; color: #37322F; font-size: 24px; margin: 0;">InstaAlert</h1>
+        <p style="color: #605A57; font-size: 14px; margin: 4px 0 0;">Password Reset</p>
+      </div>
+      <div style="background: white; border-radius: 8px; padding: 24px; text-align: center;">
+        <p style="color: #49423D; font-size: 14px; margin: 0 0 16px;">Use the code below to reset your password:</p>
+        <div style="display: inline-block; background: #37322F; color: white; font-size: 28px; font-weight: bold; letter-spacing: 8px; padding: 12px 24px; border-radius: 8px; font-family: monospace;">
+          ${otp}
+        </div>
+        <p style="color: #605A57; font-size: 12px; margin: 16px 0 0;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
+      </div>
+      <p style="color: #605A57; font-size: 12px; text-align: center; margin: 16px 0 0;">© 2026 InstaAlert. All rights reserved.</p>
+    </div>
+    `;
+    return sendEmail({ to, subject: "Reset your password - InstaAlert", html });
 };
 
 export const sendErrorNotification = async (to, serverName, errorDetails, isRecurring, solutionPrompt) => {
@@ -180,31 +183,12 @@ export const sendErrorNotification = async (to, serverName, errorDetails, isRecu
       </div>
     </div>
     `;
+
     return sendEmail({ to, subject, html });
 };
 
-export const sendPasswordResetEmail = async (to, otp) => {
-    const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #F7F5F3; border-radius: 12px; border: 1px solid rgba(55,50,47,0.12);">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 style="font-family: 'Instrument Serif', serif; color: #37322F; font-size: 24px; margin: 0;">InstaAlert</h1>
-        <p style="color: #605A57; font-size: 14px; margin: 4px 0 0;">Password Reset</p>
-      </div>
-      <div style="background: white; border-radius: 8px; padding: 24px; text-align: center;">
-        <p style="color: #49423D; font-size: 14px; margin: 0 0 16px;">Use the code below to reset your password:</p>
-        <div style="display: inline-block; background: #37322F; color: white; font-size: 28px; font-weight: bold; letter-spacing: 8px; padding: 12px 24px; border-radius: 8px; font-family: monospace;">
-          ${otp}
-        </div>
-        <p style="color: #605A57; font-size: 12px; margin: 16px 0 0;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
-      </div>
-      <p style="color: #605A57; font-size: 12px; text-align: center; margin: 16px 0 0;">© 2026 InstaAlert. All rights reserved.</p>
-    </div>
-    `;
-    return sendEmail({ to, subject: "Reset your password - InstaAlert", html });
-};
-
-export const sendIncidentNotification = async (to, incident, organizationName) => {
-    const incidentUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/dashboard/incidents/${incident._id}`;
+export const sendIncidentNotification = async (to, incident, organizationName, frontendUrl) => {
+    const incidentUrl = `${frontendUrl || "http://localhost:5173"}/dashboard/incidents/${incident._id}`;
     const html = `
     ${markdownStyles}
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #F7F5F3; border-radius: 12px; border: 1px solid rgba(55,50,47,0.12);">
