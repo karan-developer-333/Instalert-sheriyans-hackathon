@@ -19,6 +19,9 @@ const markdownStyles = `
 const createTransporter = () => {
     if (process.env.GOOGLE_REFESH_TOKEN && process.env.GOOGLE_CLINT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_USER) {
         return nodemailer.createTransport({
+            host: 'smtp.gmail.com', 
+            port: 465,              
+            secure: true,           
             service: "Gmail",
             auth: {
                 type: "OAuth2",
@@ -31,6 +34,9 @@ const createTransporter = () => {
     }
 
     return nodemailer.createTransport({
+        host: 'smtp.gmail.com', 
+        port: 465,              
+        secure: true,           
         service: "Gmail",
         auth: {
             user: process.env.EMAIL_FROM || process.env.GOOGLE_USER,
