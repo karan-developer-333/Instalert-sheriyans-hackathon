@@ -2,6 +2,7 @@ import Incident from '../models/incident.model.js';
 import errorAi from '../services/errorAi.service.js';
 import * as emailService from '../services/email-client.js';
 import Organization from '../models/organization.model.js';
+import { io } from '../socket/socket.js';
 
 const reportError = async (req, res) => {
   try {
@@ -47,12 +48,12 @@ const reportError = async (req, res) => {
 
     const enhanced = await errorAi.enhanceIncident({ errorMessage, stackTrace, statusCode, endpoint, method, metadata, serverName }, organization);
 
-    await Incident.findByIdAndUpdate(rawIncident._id, {
+    const updatedIncident = await Incident.findByIdAndUpdate(rawIncident._id, {
       title: enhanced.title,
       description: enhanced.description,
       severity: enhanced.severity,
       status: 'open'
-    });
+    }, { new: true });
 
     const solutionPrompt = await errorAi.generateSolutionPrompt({ ...newError, enhancedTitle: enhanced.title });
 
@@ -69,6 +70,11 @@ const reportError = async (req, res) => {
       false,
       solutionPrompt
     );
+
+    if (io) {
+      io.to(`org:${organization.organizationJoinCode}`).emit('receive-incident', updatedIncident);
+      console.log(`[Socket] Error incident broadcasted to org:${organization.organizationJoinCode}`);
+    }
 
     res.status(202).json({ message: 'New incident created', incidentId: rawIncident._id });
   } catch (error) {

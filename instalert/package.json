@@ -1,6 +1,6 @@
 {
   "name": "instalert",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "InstaAlert SDK for automatic error reporting and AI-powered debugging",
   "main": "index.js",
   "type": "module",

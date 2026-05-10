@@ -1,6 +1,6 @@
 import { sendError } from './sender.js';
 
-export const captureError = (err, req) => {
+export const captureError = (err, req = null) => {
   const errorData = {
     message: err.message || 'Unknown error',
     stack: err.stack || '',
@@ -18,9 +18,7 @@ export const captureError = (err, req) => {
 
 export const expressMiddleware = () => {
   return (err, req, res, next) => {
-    captureError(err, req).catch(() => {
-    });
-
+    captureError(err, req).catch(() => {});
     next(err);
   };
 };

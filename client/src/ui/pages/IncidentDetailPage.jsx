@@ -86,7 +86,6 @@ export default function IncidentDetailPage() {
                 })}
               </p>
             </CardHeader>
-            <Separator className="mx-6" />
             <CardContent className="pt-6">
               <div className="text-[#49423D] whitespace-pre-wrap markdown-content max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[rgba(55,50,47,0.2)] scrollbar-track-transparent">
                 <MarkdownRenderer content={incident.description} />
@@ -98,7 +97,7 @@ export default function IncidentDetailPage() {
         <div className="lg:col-span-1">
           <ChatBox
             incidentId={incident._id}
-            joinCode={organization?.organizationJoinCode || ""}
+            joinCode={incident.organization?.organizationJoinCode || ""}
           />
         </div>
       </div>
