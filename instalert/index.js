@@ -15,7 +15,7 @@ export const init = (userConfig) => {
   configure({
     apiKey: userConfig.apiKey,
     serverName: userConfig.serverName,
-    backendUrl: userConfig.backendUrl || 'https://instalert-api.vercel.app',
+    backendUrl: userConfig.backendUrl || 'https://instalert-api.onrender.com',
     metadata: userConfig.metadata || {},
   });
 

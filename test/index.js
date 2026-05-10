@@ -1,15 +1,14 @@
-import { init, expressMiddleware } from '../instalert/index.js';
+import { init, expressMiddleware } from 'instalert';
 import express from 'express';
 
 
-const INSTALERT_API = 'ik_live_WyainnDKIgYhXRWvjFauWw44wBMJzHnk';
+const INSTALERT_API = 'ik_live_ZevcICjvuDunchH5cfFQBPgw7t0eq6Qy`';
 const app = express();
 
 // Initialize InstaAlert - this also sets up uncaught exception handlers
 init({
   apiKey: INSTALERT_API,
   serverName: 'my-server',
-  // backendUrl: 'http://localhost:3001',
   metadata: { environment: 'production' }
 });
 
@@ -19,7 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/error', (req, res) => {
-  throw new Error('DDOS ATTACK! Server is downed!');
+  throw new Error('Server error occurred! Overloaded');
 });
 
 // Error tracking middleware MUST be after all routes (Express convention)

@@ -231,13 +231,13 @@ init({
   metadata: { environment: 'production' }
 });
 
-// Add error tracking middleware
-app.use(expressMiddleware());
-
 // Your routes...
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+// Add error tracking middleware
+app.use(expressMiddleware());
 
 app.listen(3000);`}</code></pre>
               </div>

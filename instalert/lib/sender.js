@@ -3,7 +3,7 @@ import axios from 'axios';
 let config = {
   apiKey: null,
   serverName: 'unknown-server',
-  backendUrl: 'https://instalert-api.vercel.app',
+  backendUrl: 'https://instalert-api.onrender.com',
   metadata: {},
 };
 
