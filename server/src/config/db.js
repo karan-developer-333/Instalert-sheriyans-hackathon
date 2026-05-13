@@ -1,12 +1,8 @@
 import mongoose from "mongoose";
-import {config} from "dotenv";
-config();
-
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/saas";
-
+import config from "./config.js";
 
 const connectDb = async () => {
-    await mongoose.connect(process.env.MONGODB_URI)
+    await mongoose.connect(config.MONGODB_URI)
     .then(() => {
         console.log("Connected to MongoDB")
     })

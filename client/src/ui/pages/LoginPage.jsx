@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../../store/slices/auth.slice";
 import authService from "../../services/auth.service";
 import { LogIn, Loader2, AlertCircle } from "lucide-react";
@@ -13,12 +13,16 @@ import { Separator } from "../components/ui/separator";
 export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
   const [form, setForm] = useState({ email: "", password: "" });
 
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -1,10 +1,9 @@
 import axios from "axios";
 import qs from "querystring";
-import { config } from "dotenv";
-config();
+import config from "../config/config.js";
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GITHUB_CLIENT_ID = config.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = config.GITHUB_CLIENT_SECRET;
 
 const getAuthUrl = () => {
   return `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo`;

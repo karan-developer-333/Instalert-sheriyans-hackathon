@@ -1,5 +1,6 @@
 import http from 'http';
 import { Server } from 'socket.io';
+import config from '../config/config.js';
 
 import IncidentModel from '../models/incident.model.js';
 import MessageModel from '../models/message.model.js';
@@ -9,9 +10,7 @@ import UserModel from '../models/user.model.js';
 import aiScoreService from '../services/aiScore.service.js';
 import { sendIncidentNotification } from '../services/email-client.js';
 
-const ALLOWED_ORIGINS = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',')
-  : ["http://localhost:5173"];
+const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 
 let io, server;
 

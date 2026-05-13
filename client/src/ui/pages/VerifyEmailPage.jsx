@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import { verifyEmailStart, verifyEmailSuccess, verifyEmailFailure } from "../../store/slices/auth.slice";
 import authService from "../../services/auth.service";
 import { Loader2, AlertCircle, Mail, CheckCircle, ArrowLeft } from "lucide-react";
@@ -35,18 +36,20 @@ export default function VerifyEmailPage() {
       }
       dispatch(verifyEmailSuccess({ user: data.user, role: data.user.role }));
       setSuccess(true);
+      toast.success("Email verified successfully!");
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       dispatch(verifyEmailFailure(err.error || err.message || "Invalid OTP"));
+      toast.error(err.error || err.message || "Invalid OTP");
     }
   };
 
   const handleResend = async () => {
     try {
       await authService.resendOTP(email);
-      alert("New verification code sent to your email!");
+      toast.success("New verification code sent to your email!");
     } catch (err) {
-      alert(err.message || "Failed to resend code");
+      toast.error(err.message || "Failed to resend code");
     }
   };
 

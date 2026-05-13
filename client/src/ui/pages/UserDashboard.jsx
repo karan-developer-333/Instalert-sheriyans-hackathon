@@ -14,6 +14,7 @@ import EmployeeRow from "../components/EmployeeRow";
 import ChatBox from "../components/ChatBox";
 import JoinCodeInput from "../components/JoinCodeInput";
 import { FileText, Loader2, AlertCircle, X, MessageSquare, Users, Copy, Check } from "lucide-react";
+import { SkeletonIncidentRow } from "../components/Skeleton";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -161,8 +162,10 @@ export default function UserDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-3">
                 {loading ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <SkeletonIncidentRow key={i} />
+                    ))}
                   </div>
                 ) : incidents.length === 0 ? (
                   <Card className="border-[rgba(55,50,47,0.12)]">
@@ -207,8 +210,16 @@ export default function UserDashboard() {
           <TabsContent value="employees">
             <div className="space-y-3">
               {loading ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white border border-[rgba(55,50,47,0.12)] rounded-lg px-6 py-4 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[#37322F]/10 animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-4 w-32 bg-[#37322F]/10 animate-pulse rounded" />
+                        <div className="h-3 w-48 bg-[#37322F]/10 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : employees.length === 0 ? (
                 <Card className="border-[rgba(55,50,47,0.12)]">

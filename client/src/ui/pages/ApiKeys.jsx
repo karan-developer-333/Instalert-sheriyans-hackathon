@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateKey, getKey, revokeKey, clearNewKey, clearError } from '../../store/slices/apiKey.slice.js';
-import { Trash2, Key, Copy, Check, Plus } from 'lucide-react';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { Skeleton } from '../components/Skeleton';
+import { Trash2, Key, Copy, Check, Plus, Loader2 } from 'lucide-react';
 
 const ApiKeys = () => {
   const dispatch = useDispatch();
   const { key, loading, error, newKey } = useSelector((s) => s.apiKey);
   const [copied, setCopied] = useState(false);
+  const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
 
   useEffect(() => {
     dispatch(getKey());
@@ -23,9 +26,8 @@ const ApiKeys = () => {
   };
 
   const handleRevoke = () => {
-    if (window.confirm('Revoke this API key? This action cannot be undone.')) {
-      dispatch(revokeKey());
-    }
+    dispatch(revokeKey());
+    setConfirmRevokeOpen(false);
   };
 
   return (
@@ -77,12 +79,21 @@ const ApiKeys = () => {
                 Generated: {new Date(key.generatedAt).toLocaleDateString()}
               </p>
             </div>
-            <button onClick={handleRevoke} className="text-red-500 hover:bg-red-50 p-2 rounded shrink-0">
+            <button onClick={() => setConfirmRevokeOpen(true)} className="text-red-500 hover:bg-red-50 p-2 rounded shrink-0">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmRevokeOpen}
+        onOpenChange={setConfirmRevokeOpen}
+        title="Revoke API Key"
+        description="Revoke this API key? This action cannot be undone."
+        confirmLabel="Revoke"
+        onConfirm={handleRevoke}
+      />
     </div>
   );
 };

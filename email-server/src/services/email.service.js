@@ -1,8 +1,13 @@
 import nodemailer from "nodemailer";
 import { marked } from "marked";
+import config from "../../config.js";
 
-import dotenv from "dotenv";
-dotenv.config();
+// Debug logging
+const log = {
+    info: (msg) => console.log(`[Email Service] ${msg}`),
+    error: (msg, err) => console.error(`[Email Service] ${msg}`, err?.message || ""),
+    warn: (msg) => console.warn(`[Email Service] ${msg}`),
+};
 
 const markdownStyles = `
 <style>
@@ -18,53 +23,101 @@ const markdownStyles = `
 </style>
 `;
 
-const createTransporter = () => {
-    const user = process.env.GOOGLE_USER || process.env.EMAIL_FROM;
-    const oauth2Config = {
-        type: "OAuth2",
-        user,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    };
+let cachedTransporter = null;
+let transporterInitPromise = null;
 
-    if (user && oauth2Config.clientId && oauth2Config.clientSecret && oauth2Config.refreshToken) {
-        return nodemailer.createTransport({
-            service: "Gmail",
-            auth: oauth2Config,
-        });
+const createTransporter = async () => {
+    // Return cached transporter if available
+    if (cachedTransporter) {
+        return cachedTransporter;
     }
 
-    if (user && process.env.EMAIL_PASSWORD) {
-        return nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user,
-                pass: process.env.EMAIL_PASSWORD,
-            },
-        });
+    // If already creating, return the promise
+    if (transporterInitPromise) {
+        return transporterInitPromise;
     }
 
-    throw new Error(
-        "Missing Gmail auth config. Set GOOGLE_USER + GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN for OAuth2, or provide EMAIL_PASSWORD for basic auth."
-    );
+    // Create new transporter
+    transporterInitPromise = (async () => {
+        try {
+            const user = config.GOOGLE_USER || config.EMAIL_FROM;
+            
+            log.info(`Initializing email transporter for: ${user}`);
+
+            // Try OAuth2 first
+            if (config.hasOAuth2()) {
+                log.info("Using OAuth2 authentication");
+                const oauth2Config = {
+                    type: "OAuth2",
+                    user,
+                    clientId: config.GOOGLE_CLIENT_ID,
+                    clientSecret: config.GOOGLE_CLIENT_SECRET,
+                    refreshToken: config.GOOGLE_REFRESH_TOKEN,
+                };
+
+                cachedTransporter = nodemailer.createTransport({
+                    service: "Gmail",
+                    auth: oauth2Config,
+                });
+
+                // Verify the transporter
+                await cachedTransporter.verify();
+                log.info("Transporter verified successfully (OAuth2)");
+                return cachedTransporter;
+            }
+
+            // Fall back to app password
+            if (config.hasAppPassword()) {
+                log.info("Using Gmail app password authentication");
+                cachedTransporter = nodemailer.createTransport({
+                    host: "smtp.gmail.com",
+                    port: 587,
+                    secure: false,
+                    auth: {
+                        user,
+                        pass: config.EMAIL_PASSWORD,
+                    },
+                });
+
+                // Verify the transporter
+                await cachedTransporter.verify();
+                log.info("Transporter verified successfully (App Password)");
+                return cachedTransporter;
+            }
+
+            throw new Error(
+                "Missing Gmail auth config. Set GOOGLE_USER + GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN for OAuth2, or provide EMAIL_PASSWORD for app-specific password."
+            );
+        } catch (error) {
+            log.error("Failed to create transporter:", error);
+            transporterInitPromise = null; // Reset promise to allow retry
+            throw error;
+        }
+    })();
+
+    return transporterInitPromise;
 };
-
-const transporter = createTransporter();
 
 const sendEmail = async ({ to, subject, html }) => {
     try {
-        const from = process.env.EMAIL_FROM || process.env.GOOGLE_USER || "noreply@instaalert.com";
+        log.info(`Sending email to ${to} with subject: ${subject}`);
+        
+        const transporter = await createTransporter();
+        const from = config.EMAIL_FROM;
+        
         const info = await transporter.sendMail({
             from: `"InstaAlert" <${from}>`,
             to,
             subject,
             html,
         });
-        console.log("[Email] Sent:", info.messageId);
+        
+        log.info(`Email sent successfully: ${info.messageId}`);
         return { success: true, messageId: info.messageId };
     } catch (error) {
-        console.error("[Email] Send error:", error);
+        log.error("Failed to send email:", error);
+        // Reset transporter on error to allow reconnection
+        cachedTransporter = null;
         return { success: false, error: error.message };
     }
 };

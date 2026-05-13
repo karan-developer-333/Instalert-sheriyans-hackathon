@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../../store/slices/auth.slice";
 import authService from "../../services/auth.service";
 import { UserPlus, Loader2, AlertCircle } from "lucide-react";
@@ -12,7 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 export default function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [fieldError, setFieldError] = useState("");
 

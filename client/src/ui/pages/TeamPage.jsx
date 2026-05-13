@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { organizationService } from "../../services/organization.service";
 import { fetchEmployeesSuccess, fetchOrgStart, fetchOrgFailure, setEmployeesPage, setEmployeesLimit } from "../../store/slices/organization.slice";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { SkeletonEmployeeRow } from "../components/Skeleton";
 import { Users, Loader2, AlertCircle, X, Search, UserMinus } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -21,6 +23,7 @@ export default function TeamPage() {
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState(null);
   const [actionError, setActionError] = useState("");
+  const [confirmRemoveEmployee, setConfirmRemoveEmployee] = useState(null);
 
   const loadTeam = useCallback(async () => {
     dispatch(fetchOrgStart());
@@ -48,7 +51,6 @@ export default function TeamPage() {
   };
 
   const handleRemoveEmployee = async (userId) => {
-    if (!confirm("Remove this employee from the organization?")) return;
     setRemoving(userId);
     try {
       await organizationService.removeEmployee(userId);
@@ -102,8 +104,10 @@ export default function TeamPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonEmployeeRow key={i} />
+          ))}
         </div>
       ) : filteredEmployees.length === 0 ? (
         <Card className="border-[rgba(55,50,47,0.12)]">
@@ -135,7 +139,7 @@ export default function TeamPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveEmployee(emp._id)}
+                            onClick={() => setConfirmRemoveEmployee(emp._id)}
                             disabled={removing === emp._id}
                             className="text-[#605A57] hover:text-red-600 hover:bg-red-50 ml-auto"
                           >
@@ -150,33 +154,33 @@ export default function TeamPage() {
             ))}
           </div>
 
-          <div className="hidden sm:block">
-            <Card className="border-[rgba(55,50,47,0.12)]">
-              <CardContent className="p-0">
-                {filteredEmployees.map((emp, index) => (
-                  <div key={emp._id}>
-                    {index > 0 && <Separator />}
-                    <div className="flex items-center justify-between px-6 py-4 hover:bg-[#F7F5F3] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10 shrink-0">
-                          <AvatarFallback className="bg-[#37322F] text-white text-sm">
-                            {emp.username?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#37322F] truncate">{emp.username}</p>
-                          <p className="text-xs text-[#605A57] truncate">{emp.email}</p>
+            <div className="hidden sm:block">
+              <Card className="border-[rgba(55,50,47,0.12)]">
+                <CardContent className="p-0">
+                  {filteredEmployees.map((emp, index) => (
+                    <div key={emp._id}>
+                      {index > 0 && <Separator />}
+                      <div className="flex items-center justify-between px-6 py-4 hover:bg-[#F7F5F3] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10 shrink-0">
+                            <AvatarFallback className="bg-[#37322F] text-white text-sm">
+                              {emp.username?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[#37322F] truncate">{emp.username}</p>
+                            <p className="text-xs text-[#605A57] truncate">{emp.email}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Badge variant={emp.organizationRole === "owner" ? "default" : "outline"}>
-                          {emp.organizationRole || emp.role}
-                        </Badge>
-                        {role === "organization" && emp.organizationRole !== "owner" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveEmployee(emp._id)}
+                        <div className="flex items-center gap-3 shrink-0">
+                          <Badge variant={emp.organizationRole === "owner" ? "default" : "outline"}>
+                            {emp.organizationRole || emp.role}
+                          </Badge>
+                          {role === "organization" && emp.organizationRole !== "owner" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setConfirmRemoveEmployee(emp._id)}
                             disabled={removing === emp._id}
                             className="text-[#605A57] hover:text-red-600 hover:bg-red-50"
                           >
@@ -201,6 +205,18 @@ export default function TeamPage() {
           />
         </>
       )}
+
+      <ConfirmDialog
+        open={!!confirmRemoveEmployee}
+        onOpenChange={() => setConfirmRemoveEmployee(null)}
+        title="Remove Employee"
+        description="Remove this employee from the organization?"
+        confirmLabel="Remove"
+        onConfirm={() => {
+          if (confirmRemoveEmployee) handleRemoveEmployee(confirmRemoveEmployee);
+          setConfirmRemoveEmployee(null);
+        }}
+      />
     </div>
   );
 }

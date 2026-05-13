@@ -11,6 +11,7 @@ import { getSocket, joinOrganization } from "../../utils/socket/socket";
 import { ROLES, STATUS_LABELS, STATUS_COLORS } from "../../utils/constants";
 import IncidentDetailView from "../components/IncidentDetailView";
 import Pagination from "../components/Pagination";
+import { SkeletonIncidentRow, SkeletonDashboardHeader } from "../components/Skeleton";
 import {
   FileText, Loader2, AlertCircle, X, ChevronRight, Building2,
 } from "lucide-react";
@@ -117,8 +118,13 @@ export default function IncidentsPage() {
 
   if (loadingOrg) {
     return (
-      <div className="p-4 sm:p-8 flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        <SkeletonDashboardHeader />
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <SkeletonIncidentRow key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -159,8 +165,10 @@ export default function IncidentsPage() {
       )}
 
       {incidentsLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonIncidentRow key={i} />
+          ))}
         </div>
       ) : incidents.length === 0 ? (
         <Card className="border-[rgba(55,50,47,0.12)]">

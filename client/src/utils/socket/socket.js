@@ -1,13 +1,11 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3001";
-
 let socket = null;
 
 export const initSocket = () => {
   if (socket) return socket;
 
-  socket = io(SOCKET_URL, {
+  socket = io("/", {
     withCredentials: true,
     transports: ["polling", "websocket"],
   });

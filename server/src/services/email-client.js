@@ -1,16 +1,15 @@
 import axios from "axios";
-import { config } from "dotenv";
-config();
+import config from "../config/config.js";
 
-const EMAIL_SERVER_URL = process.env.EMAIL_SERVER_URL || "http://localhost:3002";
-const EMAIL_SERVER_SECRET = process.env.EMAIL_SERVER_SECRET || "";
+const EMAIL_SERVER_URL = config.EMAIL_SERVER_URL;
+const EMAIL_SERVER_SECRET = config.EMAIL_SERVER_SECRET;
 
 const api = axios.create({
     baseURL: EMAIL_SERVER_URL,
     headers: {
         "x-email-secret": EMAIL_SERVER_SECRET,
     },
-    timeout: 15000,
+    timeout: 30000, // 30 seconds to allow for email service initialization
 });
 
 
@@ -56,7 +55,7 @@ export const sendIncidentNotification = async (to, incident, organizationName) =
             to,
             incident,
             organizationName,
-            frontendUrl: process.env.FRONTEND_URL,
+            frontendUrl: config.FRONTEND_URL,
         });
         return data;
     } catch (error) {

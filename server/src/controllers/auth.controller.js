@@ -2,10 +2,8 @@ import User from "../models/user.model.js";
 import githubService from "../services/github.service.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
-import {config} from "dotenv";
+import config from "../config/config.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email-client.js";
-
-config();
 
 const githubAuth = (req, res) => {
 
@@ -103,14 +101,13 @@ const login = async (req, res) => {
                 id: user._id,
                 username: user.username
             },
-            process.env.JWT_SECRET,
+            config.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+            ...config.getCookieOptions(),
         });
 
         res.status(200).json({
@@ -251,14 +248,13 @@ const verifyEmail = async (req, res) => {
                 id: user._id,
                 username: user.username
             },
-            process.env.JWT_SECRET,
+            config.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+            ...config.getCookieOptions(),
         });
 
         res.status(200).json({
@@ -337,8 +333,7 @@ const logout = async (req, res) => {
     try {
         res.clearCookie("token", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            ...config.getCookieOptions(),
         });
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {

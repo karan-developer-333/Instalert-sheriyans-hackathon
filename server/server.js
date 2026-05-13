@@ -1,12 +1,10 @@
-import { config } from 'dotenv';
-config({ path: './.env' });
-
+import config from './src/config/config.js';
 import { initSocket } from './src/socket/socket.js';
 import connectDB from "./src/config/db.js";
 import aiScoreService from "./src/services/aiScore.service.js";
 import app from "./src/app.js";
 
-const PORT = process.env.PORT || 3001;
+const PORT = config.PORT;
 
 const start = async () => {
   await connectDB();

@@ -8,7 +8,6 @@ import ProtectedRoute from './ui/components/ProtectedRoute';
 import { ROLES } from './utils/constants';
 import authService from './services/auth.service';
 import { userService } from './services/user.service';
-import { useCookies } from 'react-cookie';
 
 const LoginPage = lazy(() => import('./ui/pages/LoginPage'));
 const RegisterPage = lazy(() => import('./ui/pages/RegisterPage'));
@@ -53,7 +52,7 @@ function RoleBasedRedirect() {
 
   if (checkingOrg) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F3]">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#F7F5F3] z-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-[#37322F] border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-[#605A57]">Checking...</p>
@@ -74,11 +73,12 @@ function RoleBasedRedirect() {
 function AuthLoader() {
   const dispatch = useDispatch();
   const [done, setDone] = useState(false);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
-    const checkAuth = async () => {
+    const checkAuth = async (attempt = 1) => {
       try {
         const data = await authService.getMe();
         if (!data?.user) {
@@ -90,6 +90,12 @@ function AuthLoader() {
       } catch (err) {
         if (!cancelled) {
           const isAuthPage = window.location.pathname.startsWith("/auth");
+          const isNetworkError = !err || !err.status || err.code === "ERR_NETWORK";
+          if (isNetworkError && attempt <= 3) {
+            setConnecting(true);
+            await new Promise((r) => setTimeout(r, 2000));
+            return checkAuth(attempt + 1);
+          }
           if (!isAuthPage && err?.message !== "Not authenticated") {
             dispatch(loginFailure('Session expired. Please login again.'));
           }
@@ -111,10 +117,20 @@ function AuthLoader() {
 
   if (!done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F3]">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#F7F5F3] z-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#37322F] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-[#605A57]">Loading...</p>
+          {connecting ? (
+            <>
+              <div className="w-10 h-10 border-4 border-[#37322F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-[#605A57]">Connecting to server...</p>
+              <p className="text-xs text-[#605A57]/60">Retrying...</p>
+            </>
+          ) : (
+            <>
+              <div className="w-10 h-10 border-4 border-[#37322F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-[#605A57]">Loading...</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -124,7 +140,7 @@ function AuthLoader() {
 }
 
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[#F7F5F3]">
+  <div className="fixed inset-0 flex items-center justify-center bg-[#F7F5F3] z-50">
     <div className="flex flex-col items-center gap-3">
       <div className="w-10 h-10 border-4 border-[#37322F] border-t-transparent rounded-full animate-spin" />
       <p className="text-sm text-[#605A57]">Loading...</p>

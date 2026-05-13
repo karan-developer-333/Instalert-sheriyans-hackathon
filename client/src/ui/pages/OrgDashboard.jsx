@@ -14,6 +14,8 @@ import AIAssistantDialog from "../components/AIAssistantDialog";
 import OwnerDashboardHeader from "../components/OwnerDashboardHeader";
 import Leaderboard from "../components/Leaderboard";
 import OrgAIBubble from "../components/OrgAIBubble";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { SkeletonTabs, SkeletonDashboardHeader } from "../components/Skeleton";
 import { Users, Plus, Loader2, AlertCircle, X, ClipboardCopy,
   FileText, Clock, Trash2, CheckCircle, ChevronDown, ChevronUp, MessageCircle, Pencil, Save,
 } from "lucide-react";
@@ -49,6 +51,8 @@ export default function OrgDashboard() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingMessageContent, setEditingMessageContent] = useState("");
   const [deleteConfirmMsg, setDeleteConfirmMsg] = useState(null);
+  const [confirmDeleteIncident, setConfirmDeleteIncident] = useState(null);
+  const [confirmRemoveEmployee, setConfirmRemoveEmployee] = useState(null);
 
   const loadData = useCallback(async () => {
     dispatch(fetchOrgStart());
@@ -186,13 +190,14 @@ export default function OrgDashboard() {
   }, [newIncident, organization]);
 
   const handleDeleteIncident = useCallback(async (id) => {
-    if (!confirm("Delete this incident? This action cannot be undone.")) return;
     try {
       await incidentService.deleteIncident(id);
       dispatch(removeIncident(id));
       if (selectedIncident?._id === id) setSelectedIncident(null);
+      setConfirmDeleteIncident(null);
     } catch (err) {
       setActionError(err.message);
+      setConfirmDeleteIncident(null);
     }
   }, [dispatch, selectedIncident]);
 
@@ -254,12 +259,12 @@ export default function OrgDashboard() {
     }
   }, [deleteConfirmMsg, organization, user]);
 
-  const handleRemoveEmployee = useCallback(async (userId) => {
-    if (!confirm("Remove this employee from the organization?")) return;
+  const handleRemoveEmployeeConfirm = useCallback(async (userId) => {
     setRemoving(userId);
     try {
       await organizationService.removeEmployee(userId);
       dispatch(removeEmployeeSuccess(userId));
+      setConfirmRemoveEmployee(null);
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -444,7 +449,7 @@ export default function OrgDashboard() {
           <div className="flex gap-2">
             {incident.status === "open" && (
               <Button
-                onClick={() => handleDeleteIncident(incident._id)}
+                onClick={() => setConfirmDeleteIncident(incident._id)}
                 variant="outline"
                 className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
               >
@@ -568,6 +573,24 @@ export default function OrgDashboard() {
         </Dialog>
       )}
 
+      <ConfirmDialog
+        open={!!confirmDeleteIncident}
+        onOpenChange={() => setConfirmDeleteIncident(null)}
+        title="Delete Incident"
+        description="Delete this incident? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => handleDeleteIncident(confirmDeleteIncident)}
+      />
+
+      <ConfirmDialog
+        open={!!confirmRemoveEmployee}
+        onOpenChange={() => setConfirmRemoveEmployee(null)}
+        title="Remove Employee"
+        description="Remove this employee from the organization?"
+        confirmLabel="Remove"
+        onConfirm={() => handleRemoveEmployeeConfirm(confirmRemoveEmployee)}
+      />
+
       <OwnerDashboardHeader />
 
       <div className="mt-6">
@@ -642,8 +665,19 @@ export default function OrgDashboard() {
         <TabsContent value="employees">
           <div className="space-y-2">
             {orgLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white border border-[rgba(55,50,47,0.12)] rounded-lg">
+                    <div className="flex items-center gap-3 px-6 py-4">
+                      <div className="w-9 h-9 rounded-full bg-[#37322F]/10 animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-4 w-32 bg-[#37322F]/10 animate-pulse rounded" />
+                        <div className="h-3 w-48 bg-[#37322F]/10 animate-pulse rounded" />
+                      </div>
+                      <div className="w-16 h-6 bg-[#37322F]/10 animate-pulse rounded-full" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : employees.length === 0 ? (
               <Card className="border-[rgba(55,50,47,0.12)]">
@@ -658,7 +692,7 @@ export default function OrgDashboard() {
                   key={emp._id}
                   employee={emp}
                   isOwner={true}
-                  onRemove={removing === emp._id ? null : handleRemoveEmployee}
+                   onRemove={removing === emp._id ? null : (id) => setConfirmRemoveEmployee(id)}
                 />
               ))
             )}

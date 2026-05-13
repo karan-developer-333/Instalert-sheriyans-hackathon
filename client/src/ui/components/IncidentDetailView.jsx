@@ -266,7 +266,7 @@ export default function IncidentDetailView({ incident, onClose, orgJoinCode }) {
   return (
     <Card className="border-[rgba(55,50,47,0.12)] w-full">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className={`${STATUS_COLORS[incident.status]} border`}>

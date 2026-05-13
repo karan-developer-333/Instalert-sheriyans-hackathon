@@ -1,9 +1,7 @@
 import { Mistral } from "@mistralai/mistralai";
-import { config } from "dotenv";
+import config from "../config/config.js";
 
-config();
-
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = new Mistral({ apiKey: config.MISTRAL_API_KEY });
 
 const TOOLS = [
     {

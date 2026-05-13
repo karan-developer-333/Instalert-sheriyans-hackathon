@@ -1,9 +1,7 @@
-import { config } from 'dotenv';
-config();
-
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import config from './config/config.js';
 
 import fs from 'fs'
 import morgan from 'morgan'
@@ -23,9 +21,7 @@ const app = express();
 // setup the logger
 app.use(morgan('dev'))
 
-const ALLOWED_ORIGINS = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',')
-  : ['http://localhost:5173'];
+const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 
 const corsOptions = {
   origin: (origin, callback) => {

@@ -45,8 +45,41 @@ export default function IncidentDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-[#37322F]" />
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto">
+        <div className="animate-pulse space-y-6">
+          <div className="h-5 w-24 bg-[#37322F]/10 rounded" />
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 bg-[#37322F]/10 rounded" />
+            <div className="space-y-2">
+              <div className="h-6 w-64 bg-[#37322F]/10 rounded" />
+              <div className="h-4 w-40 bg-[#37322F]/10 rounded" />
+            </div>
+          </div>
+          <div className="bg-white border border-[rgba(55,50,47,0.12)] rounded-lg p-6 space-y-4">
+            <div className="h-4 w-full bg-[#37322F]/10 rounded" />
+            <div className="h-4 w-3/4 bg-[#37322F]/10 rounded" />
+            <div className="h-4 w-1/2 bg-[#37322F]/10 rounded" />
+          </div>
+          <div className="bg-white border border-[rgba(55,50,47,0.12)] rounded-lg p-6">
+            <div className="h-5 w-32 bg-[#37322F]/10 rounded mb-4" />
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#37322F]/10 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-24 bg-[#37322F]/10 rounded" />
+                  <div className="h-4 w-full bg-[#37322F]/10 rounded" />
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#37322F]/10 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-24 bg-[#37322F]/10 rounded" />
+                  <div className="h-4 w-3/4 bg-[#37322F]/10 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
